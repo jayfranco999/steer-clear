@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STEER CLEAR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: none;
+        }
+        .screen.active { display: block; }
+
+        /* ============ LANDING - SMOOTH UNIFIED SCENE ============ */
+        #landing-screen {
+            background: linear-gradient(180deg,
+                #020008 0%,
+                #0a0020 25%,
+                #120030 45%,
+                #0a0a15 60%,
+                #050510 100%
+            );
+        }
+
+        .landing-scene {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            overflow: hidden;
+        }
+
+        /* Stars layer - covers entire screen */
+        .landing-stars {
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 60%;
+            background-image:
+                radial-gradient(1px 1px at 5% 10%, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 12% 25%, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 20% 8%, rgba(0,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 28% 18%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1px 1px at 35% 30%, rgba(255,255,255,0.7), transparent),
+                radial-gradient(2px 2px at 45% 12%, rgba(255,0,255,0.6), transparent),
+                radial-gradient(1px 1px at 55% 22%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1px 1px at 65% 5%, rgba(255,255,255,0.8), transparent),
+                radial-gradient(2px 2px at 75% 15%, rgba(0,255,255,0.5), transparent),
+                radial-gradient(1px 1px at 85% 28%, rgba(255,255,255,0.6), transparent),
+                radial-gradient(1px 1px at 92% 8%, rgba(255,255,255,0.7), transparent);
+            animation: gentleStars 30s ease-in-out infinite;
+        }
+
+        @keyframes gentleStars {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        /* Horizon glow */
+        .landing-horizon {
+            position: absolute;
+            top: 40%; left: 0; right: 0;
+            height: 20%;
+            background: linear-gradient(180deg,
+                transparent 0%,
+                rgba(255, 0, 255, 0.05) 40%,
+                rgba(0, 255, 255, 0.08) 60%,
+                transparent 100%
+            );
+        }
+
+        /* Road - perspective effect */
+        .landing-road {
+            position: absolute;
+            top: 50%; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(180deg,
+                rgba(10, 10, 20, 0.9) 0%,
+                rgba(5, 5, 15, 1) 100%
+            );
+            clip-path: polygon(35% 0%, 65% 0%, 90% 100%, 10% 100%);
+        }
+
+        .road-surface {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(180deg, #0a0a12 0%, #050508 100%);
+        }
+
+        .road-glow {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                transparent 10%,
+                rgba(255, 0, 255, 0.15) 10%,
+                transparent 12%,
+                transparent 49%,
+                rgba(0, 255, 255, 0.2) 50%,
+                transparent 51%,
+                transparent 88%,
+                rgba(255, 0, 255, 0.15) 90%,
+                transparent 90%,
+                transparent 100%
+            );
+        }
+
+        .road-lines {
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                rgba(0, 255, 255, 0.8) 0px,
+                rgba(0, 255, 255, 0.8) 40px,
+                transparent 40px,
+                transparent 80px
+            );
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            animation: lineFlow 1.5s linear infinite;
+        }
+
+        @keyframes lineFlow {
+            from { background-position-y: 0; }
+            to { background-position-y: 80px; }
+        }
+
+        /* Car */
+        .landing-car {
+            position: absolute;
+            bottom: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 140px;
+            z-index: 10;
+        }
+
+        .car-body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #00ddff 0%, #0088bb 40%, #004466 100%);
+            border-radius: 15px 15px 8px 8px;
+            box-shadow:
+                0 0 40px rgba(0, 255, 255, 0.6),
+                0 0 80px rgba(0, 255, 255, 0.3),
+                0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .car-body::before {
+            content: '';
+            position: absolute;
+            top: 25px; left: 12px; right: 12px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+        }
+
+        .car-body::after {
+            content: '';
+            position: absolute;
+            bottom: -25px; left: 50%;
+            transform: translateX(-50%);
+            width: 60px; height: 40px;
+            background: radial-gradient(ellipse, rgba(255, 200, 50, 0.6), transparent);
+            filter: blur(12px);
+        }
+
+        /* Content overlay */
+        .landing-content {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 20;
+        }
+
+        .game-logo {
+            font-size: 72px;
+            color: #00ffff;
+            text-shadow:
+                0 0 20px rgba(0, 255, 255, 0.8),
+                0 0 40px rgba(0, 255, 255, 0.5),
+                0 0 80px rgba(0, 136, 255, 0.4),
+                4px 4px 0 rgba(255, 0, 255, 0.8);
+            margin-bottom: 10px;
+            animation: logoBreath 3s ease-in-out infinite;
+            letter-spacing: -3px;
+        }
+
+        @keyframes logoBreath {
+            0%, 100% { opacity: 0.9; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+
+        .tagline {
+            font-size: 11px;
+            color: rgba(255, 0, 255, 0.9);
+            text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+            margin-bottom: 50px;
+            letter-spacing: 3px;
+        }
+
+        .big-btn {
+            padding: 20px 60px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 20px;
+            background: linear-gradient(180deg, #ff00ff, #aa00aa);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow:
+                0 0 30px rgba(255, 0, 255, 0.5),
+                0 4px 20px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .big-btn:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 0 50px rgba(255, 0, 255, 0.7),
+                0 8px 30px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* ============ INSTRUCTIONS ============ */
+        #instructions-screen {
+            background: linear-gradient(180deg, #0a0015 0%, #15002d 50%, #0a0015 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+        #instructions-screen.active { display: flex; }
+
+        .instructions-title {
+            font-size: 36px;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 30px;
+        }
+
+        .steering-demo {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .steering-example {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            border: 3px solid #333;
+            width: 180px;
+            transition: all 0.3s;
+        }
+
+        .steering-example.active {
+            border-color: #00ffff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .wheel-visual {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 12px;
+            border: 6px solid #fff;
+            border-radius: 50%;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .wheel-visual::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 15%;
+            right: 15%;
+            height: 6px;
+            background: #fff;
+            transform: translateY(-50%);
+        }
+
+        .wheel-visual::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 25%;
+            bottom: 25%;
+            width: 6px;
+            background: #fff;
+            transform: translateX(-50%);
+        }
+
+        .steering-example.go-left .wheel-visual { transform: rotate(-35deg); }
+        .steering-example.go-right .wheel-visual { transform: rotate(35deg); }
+
+        .steering-label {
+            font-size: 14px;
+            color: #00ffff;
+            margin-bottom: 6px;
+        }
+
+        .steering-desc {
+            font-size: 8px;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        .key-instruction {
+            font-size: 11px;
+            color: #ff00ff;
+            background: rgba(255, 0, 255, 0.1);
+            padding: 20px 50px;
+            border: 2px solid #ff00ff;
+            margin-bottom: 25px;
+            text-align: center;
+            line-height: 2;
+            max-width: 700px;
+        }
+
+        .drink-rules-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #ffcc00;
+            padding: 20px 50px;
+            margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
+        }
+
+        .drink-rules-title {
+            font-size: 12px;
+            color: #ffcc00;
+            margin-bottom: 15px;
+        }
+
+        .drink-rule-item {
+            font-size: 9px;
+            color: #ccc;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+        }
+
+        .drink-rule-item .penalty { color: #ff00ff; }
+
+        /* ============ SETUP ============ */
+        #setup-screen {
+            background: linear-gradient(180deg, #0a0015 0%, #1a0030 50%, #0a0015 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #setup-screen.active { display: flex; }
+
+        .setup-title {
+            font-size: 28px;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 40px;
+        }
+
+        .player-setup {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .player-input {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .player-input label {
+            font-size: 10px;
+            color: #ff00ff;
+            width: 50px;
+        }
+
+        .player-input input {
+            flex: 1;
+            padding: 12px 15px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            background: rgba(255, 0, 255, 0.1);
+            border: 2px solid #ff00ff;
+            color: #fff;
+            outline: none;
+        }
+
+        .add-player-btn {
+            padding: 12px 25px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 9px;
+            background: transparent;
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .player-count {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 25px;
+        }
+
+        /* ============ GAME ============ */
+        #game-screen {
+            background: linear-gradient(180deg,
+                #020008 0%,
+                #0a0020 20%,
+                #120030 35%,
+                #0a0a15 50%,
+                #050510 100%
+            );
+        }
+
+        .game-container {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+        }
+
+        /* HUD - minimal, clean */
+        .game-hud {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 30;
+        }
+
+        .driver-info { text-align: left; }
+        .driver-label { font-size: 7px; color: rgba(255,255,255,0.4); }
+        .driver-name { font-size: 14px; color: #ff00ff; text-shadow: 0 0 10px rgba(255,0,255,0.5); }
+
+        .chain-display { text-align: center; }
+        .chain-number { font-size: 36px; color: #ffcc00; text-shadow: 0 0 20px rgba(255,204,0,0.5); line-height: 1; }
+        .chain-label { font-size: 7px; color: rgba(255,255,255,0.4); }
+
+        .speed-display { text-align: right; }
+        .speed-status { font-size: 10px; color: #00ff00; text-shadow: 0 0 8px currentColor; }
+        .speed-status.medium { color: #ffcc00; }
+        .speed-status.fast { color: #ff6600; }
+        .speed-status.insane { color: #ff3333; animation: pulse 0.5s infinite; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+        /* Road Area - fills screen */
+        .road-area {
+            position: absolute;
+            top: 60px; left: 0; right: 0; bottom: 0;
+            overflow: hidden;
+        }
+
+        .road {
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            bottom: 0;
+            background: linear-gradient(180deg, #0a0a15 0%, #050508 100%);
+            z-index: 5;
+        }
+
+        .road-edge {
+            position: absolute;
+            top: 0;
+            width: 10px;
+            height: 100%;
+            background: #ff00ff;
+            box-shadow: 0 0 40px #ff00ff, 0 0 80px #ff00ff;
+        }
+        .road-edge.left { left: 0; }
+        .road-edge.right { right: 0; }
+
+        .lane-dividers {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 20%;
+            pointer-events: none;
+        }
+
+        .lane-divider {
+            width: 6px;
+            height: 100%;
+            background: repeating-linear-gradient(to bottom, #00ffff 0px, #00ffff 50px, transparent 50px, transparent 100px);
+            box-shadow: 0 0 20px #00ffff;
+            animation: laneMove 0.5s linear infinite;
+        }
+
+        @keyframes laneMove {
+            from { background-position-y: 0; }
+            to { background-position-y: 100px; }
+        }
+
+        .road.fast .lane-divider { animation-duration: 0.25s; }
+        .road.insane .lane-divider { animation-duration: 0.15s; }
+
+        /* Obstacles */
+        .obstacles-layer {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 18%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 65px;
+            height: 110px;
+            border-radius: 12px 12px 6px 6px;
+            box-shadow: 0 0 25px currentColor;
+        }
+
+        .obstacle.red { background: linear-gradient(180deg, #ff3333 0%, #aa0000 100%); color: #ff3333; }
+        .obstacle.yellow { background: linear-gradient(180deg, #ffcc00 0%, #aa8800 100%); color: #ffcc00; }
+        .obstacle.green { background: linear-gradient(180deg, #33ff33 0%, #00aa00 100%); color: #33ff33; }
+
+        .obstacle::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 8px;
+            right: 8px;
+            height: 35px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 5px;
+        }
+
+        .obstacle.lane-0 { left: 10%; }
+        .obstacle.lane-1 { left: 43%; }
+        .obstacle.lane-2 { left: 76%; }
+
+        /* Player Car */
+        .player-car {
+            position: absolute;
+            bottom: 5%;
+            width: 75px;
+            height: 130px;
+            z-index: 20;
+            transition: left 0.15s ease-out;
+        }
+
+        .player-car-body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #00ffff 0%, #0077aa 50%, #004466 100%);
+            border-radius: 15px 15px 8px 8px;
+            box-shadow: 0 0 40px #00ffff, 0 0 80px rgba(0, 255, 255, 0.4);
+            position: relative;
+            transition: transform 0.12s;
+        }
+
+        .player-car-body::before {
+            content: '';
+            position: absolute;
+            top: 22px;
+            left: 10px;
+            right: 10px;
+            height: 45px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 6px;
+        }
+
+        .player-car-body::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 40px;
+            background: radial-gradient(ellipse, rgba(255, 255, 0, 0.7), transparent);
+            filter: blur(10px);
+        }
+
+        .player-car.lane-0 { left: 8%; }
+        .player-car.lane-1 { left: 41%; }
+        .player-car.lane-2 { left: 74%; }
+
+        .player-car.turning-left .player-car-body { transform: rotate(-6deg); }
+        .player-car.turning-right .player-car-body { transform: rotate(6deg); }
+
+        /* Camera */
+        .camera-container {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 240px;
+            height: 170px;
+            background: #000;
+            border: 3px solid #ff00ff;
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 25;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);
+        }
+
+        .camera-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .pose-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            padding: 5px 12px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 12px;
+            color: #666;
+        }
+        .pose-indicator.ready { color: #00ff00; }
+        .pose-indicator.left { color: #00ffff; }
+        .pose-indicator.right { color: #ff00ff; }
+
+        /* Player Queue */
+        .player-queue {
+            position: absolute;
+            top: 80px;
+            left: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 25;
+        }
+
+        .queue-player {
+            padding: 6px 12px;
+            font-size: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #333;
+            border-radius: 4px;
+            color: #555;
+        }
+        .queue-player.active { border-color: #ff00ff; color: #ff00ff; box-shadow: 0 0 10px rgba(255, 0, 255, 0.4); }
+        .queue-player.out { opacity: 0.3; text-decoration: line-through; }
+
+        /* Drink Cue - Center pop-up like calibration */
+        .drink-cue {
+            position: fixed;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            text-align: center;
+            z-index: 90;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .drink-cue.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .drink-cue-text {
+            font-size: 42px;
+            color: #ff00ff;
+            text-shadow: 0 0 40px #ff00ff, 0 0 80px #ff00ff;
+            animation: drinkPulse 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes drinkPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+
+        .drink-cue-sub {
+            font-size: 14px;
+            color: #fff;
+            margin-top: 10px;
+            text-shadow: 0 0 10px #fff;
+        }
+
+        /* Calibration - Uses actual game view */
+        .calibration-prompt {
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .calibration-prompt.show { opacity: 1; }
+
+        .calibration-text {
+            font-size: 32px;
+            text-shadow: 0 0 30px currentColor;
+            margin-bottom: 10px;
+        }
+
+        .calibration-text.left { color: #00ffff; }
+        .calibration-text.right { color: #ff00ff; }
+        .calibration-text.ready { color: #00ff00; }
+
+        .calibration-sub {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Countdown - Cool */
+        .countdown-container {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .countdown-container.show { display: flex; }
+
+        .countdown-text {
+            font-size: 100px;
+            text-shadow: 0 0 50px currentColor, 0 0 100px currentColor;
+            animation: countPop 0.8s ease-out;
+        }
+
+        .countdown-text.num { color: #fff; }
+        .countdown-text.phrase { font-size: 48px; }
+        .countdown-text.phrase1 { color: #00ffff; }
+        .countdown-text.phrase2 { color: #ff00ff; }
+        .countdown-text.phrase3 { color: #ffcc00; }
+        .countdown-text.go { color: #00ff00; font-size: 120px; }
+
+        @keyframes countPop {
+            0% { transform: scale(2); opacity: 0; }
+            30% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Near miss */
+        .near-miss-effect {
+            position: fixed;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            color: #ffcc00;
+            text-shadow: 0 0 20px #ffcc00;
+            opacity: 0;
+            z-index: 90;
+            pointer-events: none;
+        }
+
+        .near-miss-effect.show { animation: nearPop 0.5s ease-out; }
+
+        @keyframes nearPop {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.8); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        .crash-flash {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 0, 0, 0.4);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .crash-flash.show { animation: flash 0.4s ease-out; }
+
+        @keyframes flash { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+        /* Game message */
+        .game-message {
+            position: fixed;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .game-message.show { opacity: 1; }
+        .game-message.crash { color: #ff3333; text-shadow: 0 0 40px #ff3333; }
+        .game-message.chain { color: #ffcc00; text-shadow: 0 0 40px #ffcc00; }
+        .game-message.next { color: #00ffff; text-shadow: 0 0 40px #00ffff; font-size: 40px; }
+
+        /* ============ RESULT ============ */
+        #result-screen {
+            background: linear-gradient(180deg, #0a0015 0%, #1a0030 50%, #0a0015 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #result-screen.active { display: flex; }
+
+        .result-title {
+            font-size: 50px;
+            margin-bottom: 25px;
+        }
+        .result-title.good { color: #00ff00; text-shadow: 0 0 40px #00ff00; }
+        .result-title.bad { color: #ff3333; text-shadow: 0 0 40px #ff3333; }
+
+        .result-stats {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 20px;
+            line-height: 2;
+            text-align: center;
+        }
+        .result-stats .hl { color: #ffcc00; }
+
+        .result-penalty {
+            font-size: 18px;
+            color: #ff00ff;
+            margin-bottom: 35px;
+            text-shadow: 0 0 20px #ff00ff;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        .result-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .result-btn {
+            padding: 15px 40px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 2px solid #fff;
+            cursor: pointer;
+        }
+        .result-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .result-btn.primary { background: linear-gradient(180deg, #ff00ff, #aa00aa); border-color: #ff00ff; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-15px); }
+            40% { transform: translateX(15px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.4s ease-in-out; }
+    </style>
+</head>
+<body>
+    <!-- LANDING -->
+    <div id="landing-screen" class="screen active">
+        <div class="landing-scene">
+            <div class="landing-stars"></div>
+            <div class="landing-horizon"></div>
+            <div class="landing-road">
+                <div class="road-surface"></div>
+                <div class="road-glow"></div>
+                <div class="road-lines"></div>
+            </div>
+            <div class="landing-car">
+                <div class="car-body"></div>
+            </div>
+        </div>
+        <div class="landing-content">
+            <div class="game-logo">STEER CLEAR</div>
+            <div class="tagline">DODGE EVERYTHING. CRASH NOTHING.</div>
+            <button class="big-btn" id="play-btn">DRIVE</button>
+        </div>
+    </div>
+
+    <!-- INSTRUCTIONS -->
+    <div id="instructions-screen" class="screen">
+        <div class="instructions-title">HOW TO DRIVE</div>
+
+        <div class="steering-demo">
+            <div class="steering-example go-left" id="steer-left">
+                <div class="wheel-visual"></div>
+                <div class="steering-label">← LEFT</div>
+                <div class="steering-desc">Hard left turn</div>
+            </div>
+            <div class="steering-example active" id="steer-center">
+                <div class="wheel-visual"></div>
+                <div class="steering-label">STRAIGHT</div>
+                <div class="steering-desc">Keep it level</div>
+            </div>
+            <div class="steering-example go-right" id="steer-right">
+                <div class="wheel-visual"></div>
+                <div class="steering-label">RIGHT →</div>
+                <div class="steering-desc">Hard right turn</div>
+            </div>
+        </div>
+
+        <div class="key-instruction">
+            HOLD UP AN INVISIBLE STEERING WHEEL<br>
+            Turn hard left or right to switch lanes. Like driving a real car.
+        </div>
+
+        <div class="drink-rules-box">
+            <div class="drink-rules-title">DRINKING RULES</div>
+            <div class="drink-rule-item"><span>Crash</span><span class="penalty">1 sip</span></div>
+            <div class="drink-rule-item"><span>3 crashes (you're out)</span><span class="penalty">BOTTOMS UP</span></div>
+            <div class="drink-rule-item"><span>Chain of 10+</span><span class="penalty">Pick someone to drink</span></div>
+            <div class="drink-rule-item"><span>Most crashes</span><span class="penalty">BOTTOMS UP</span></div>
+        </div>
+
+        <button class="big-btn" id="got-it-btn">GOT IT</button>
+    </div>
+
+    <!-- SETUP -->
+    <div id="setup-screen" class="screen">
+        <div class="setup-title">WHO'S DRIVING?</div>
+        <div class="player-setup" id="player-setup">
+            <div class="player-input"><label>P1</label><input type="text" placeholder="name" class="player-name" maxlength="10"></div>
+            <div class="player-input"><label>P2</label><input type="text" placeholder="name" class="player-name" maxlength="10"></div>
+        </div>
+        <button class="add-player-btn" id="add-player-btn">+ ADD DRIVER</button>
+        <div class="player-count" id="player-count">2 drivers</div>
+        <button class="big-btn" id="start-btn">START</button>
+    </div>
+
+    <!-- GAME -->
+    <div id="game-screen" class="screen">
+        <div class="game-container">
+            <div class="game-hud">
+                <div class="driver-info">
+                    <div class="driver-label">DRIVER</div>
+                    <div class="driver-name" id="driver-name">???</div>
+                </div>
+                <div class="chain-display">
+                    <div class="chain-number" id="chain-number">0</div>
+                    <div class="chain-label">CHAIN</div>
+                </div>
+                <div class="speed-display">
+                    <div class="speed-status" id="speed-status">CRUISING</div>
+                </div>
+            </div>
+
+            <div class="road-area">
+                <div class="road" id="road">
+                    <div class="road-edge left"></div>
+                    <div class="road-edge right"></div>
+                    <div class="lane-dividers">
+                        <div class="lane-divider"></div>
+                        <div class="lane-divider"></div>
+                    </div>
+                    <div class="obstacles-layer" id="obstacles-layer"></div>
+                    <div class="player-car lane-1" id="player-car">
+                        <div class="player-car-body"></div>
+                    </div>
+                </div>
+
+                <div class="near-miss-effect" id="near-miss">CLOSE!</div>
+                <div class="crash-flash" id="crash-flash"></div>
+            </div>
+
+            <div class="camera-container">
+                <video id="webcam" autoplay playsinline muted></video>
+                <div class="pose-indicator" id="pose-indicator">HOLD WHEEL</div>
+            </div>
+
+            <div class="player-queue" id="player-queue"></div>
+
+            <!-- Calibration prompt (overlays game view) -->
+            <div class="calibration-prompt" id="calibration-prompt">
+                <div class="calibration-text" id="calibration-text">STEER LEFT</div>
+                <div class="calibration-sub" id="calibration-sub">move the car to prove it works</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result-screen" class="screen">
+        <div class="result-title" id="result-title">WRECKED</div>
+        <div class="result-stats" id="result-stats"></div>
+        <div class="result-penalty" id="result-penalty"></div>
+        <div class="result-buttons">
+            <button class="result-btn" id="menu-btn">QUIT</button>
+            <button class="result-btn primary" id="again-btn">AGAIN</button>
+        </div>
+    </div>
+
+    <!-- Overlays -->
+    <div class="game-message" id="game-message"></div>
+    <div class="countdown-container" id="countdown-container">
+        <div class="countdown-text" id="countdown-text"></div>
+    </div>
+    <div class="drink-cue" id="drink-cue">
+        <div class="drink-cue-text" id="drink-cue-text">DRINK</div>
+        <div class="drink-cue-sub" id="drink-cue-sub">1 sip</div>
+    </div>
+
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
+    <script>
+        const state = {
+            players: [],
+            currentPlayerIndex: 0,
+            chain: 0,
+            bestChain: 0,
+            crashes: {},
+            calibrated: {}, // Track who has done calibration
+            currentLane: 1,
+            obstacles: [],
+            obstacleId: 0,
+            roundActive: false,
+            calibrationActive: false,
+            gameSpeed: 1,
+            steeringPose: null,
+            lastSteer: 'center',
+            nearMissShown: {},
+            obstacleCount: 0,
+            warmupActive: false
+        };
+
+        const screens = {
+            landing: document.getElementById('landing-screen'),
+            instructions: document.getElementById('instructions-screen'),
+            setup: document.getElementById('setup-screen'),
+            game: document.getElementById('game-screen'),
+            result: document.getElementById('result-screen')
+        };
+
+        const el = {
+            webcam: document.getElementById('webcam'),
+            road: document.getElementById('road'),
+            obstaclesLayer: document.getElementById('obstacles-layer'),
+            playerCar: document.getElementById('player-car'),
+            poseIndicator: document.getElementById('pose-indicator'),
+            chainNumber: document.getElementById('chain-number'),
+            driverName: document.getElementById('driver-name'),
+            speedStatus: document.getElementById('speed-status'),
+            playerQueue: document.getElementById('player-queue'),
+            nearMiss: document.getElementById('near-miss'),
+            crashFlash: document.getElementById('crash-flash'),
+            gameMessage: document.getElementById('game-message'),
+            countdownContainer: document.getElementById('countdown-container'),
+            countdownText: document.getElementById('countdown-text'),
+            resultTitle: document.getElementById('result-title'),
+            resultStats: document.getElementById('result-stats'),
+            resultPenalty: document.getElementById('result-penalty'),
+            playerSetup: document.getElementById('player-setup'),
+            playerCount: document.getElementById('player-count'),
+            calibrationPrompt: document.getElementById('calibration-prompt'),
+            calibrationText: document.getElementById('calibration-text'),
+            calibrationSub: document.getElementById('calibration-sub'),
+            drinkCue: document.getElementById('drink-cue'),
+            drinkCueText: document.getElementById('drink-cue-text'),
+            drinkCueSub: document.getElementById('drink-cue-sub')
+        };
+
+        function showScreen(name) {
+            Object.values(screens).forEach(s => s.classList.remove('active'));
+            screens[name].classList.add('active');
+            if (name === 'instructions') startSteeringDemo();
+            else stopSteeringDemo();
+        }
+
+        let steeringDemoInterval;
+        function startSteeringDemo() {
+            let step = 0;
+            const steps = ['steer-left', 'steer-center', 'steer-right'];
+            function runStep() {
+                document.querySelectorAll('.steering-example').forEach(s => s.classList.remove('active'));
+                document.getElementById(steps[step % 3]).classList.add('active');
+                step++;
+            }
+            runStep();
+            steeringDemoInterval = setInterval(runStep, 1500);
+        }
+        function stopSteeringDemo() { if (steeringDemoInterval) clearInterval(steeringDemoInterval); }
+
+        function addPlayerInput() {
+            const count = document.querySelectorAll('.player-name').length + 1;
+            if (count > 8) return;
+            const div = document.createElement('div');
+            div.className = 'player-input';
+            div.innerHTML = `<label>P${count}</label><input type="text" placeholder="name" class="player-name" maxlength="10">`;
+            el.playerSetup.appendChild(div);
+            el.playerCount.textContent = `${count} drivers`;
+        }
+
+        function getPlayers() {
+            return Array.from(document.querySelectorAll('.player-name')).map((input, i) => input.value.trim() || `P${i + 1}`);
+        }
+
+        function renderPlayerQueue() {
+            el.playerQueue.innerHTML = '';
+            state.players.forEach((p, i) => {
+                const div = document.createElement('div');
+                div.className = 'queue-player' + (i === state.currentPlayerIndex ? ' active' : '') + (state.crashes[p] >= 3 ? ' out' : '');
+                div.textContent = p + (state.crashes[p] ? ` x${state.crashes[p]}` : '');
+                el.playerQueue.appendChild(div);
+            });
+        }
+
+        let pose, camera;
+        async function initMediaPipe() {
+            pose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
+            pose.setOptions({ modelComplexity: 0, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+            pose.onResults(onPoseResults);
+            camera = new Camera(el.webcam, {
+                onFrame: async () => { await pose.send({ image: el.webcam }); },
+                width: 640, height: 480
+            });
+            await camera.start();
+        }
+
+        function onPoseResults(results) {
+            if (!state.roundActive && !state.calibrationActive) return;
+            if (results.poseLandmarks) {
+                detectSteering(results.poseLandmarks);
+            } else {
+                state.steeringPose = null;
+                el.poseIndicator.textContent = 'HOLD WHEEL';
+                el.poseIndicator.className = 'pose-indicator';
+            }
+        }
+
+        function detectSteering(lm) {
+            const leftWrist = lm[15], rightWrist = lm[16];
+            const leftShoulder = lm[11], rightShoulder = lm[12];
+            const leftUp = leftWrist.y < leftShoulder.y + 0.15;
+            const rightUp = rightWrist.y < rightShoulder.y + 0.15;
+
+            if (!leftUp || !rightUp) {
+                state.steeringPose = null;
+                el.poseIndicator.textContent = 'HOLD WHEEL';
+                el.poseIndicator.className = 'pose-indicator';
+                return;
+            }
+
+            const tilt = leftWrist.y - rightWrist.y;
+            // Higher threshold = needs more deliberate swerve to register
+            if (tilt > 0.12) {
+                state.steeringPose = 'left';
+                el.poseIndicator.textContent = '← LEFT';
+                el.poseIndicator.className = 'pose-indicator left';
+            } else if (tilt < -0.12) {
+                state.steeringPose = 'right';
+                el.poseIndicator.textContent = 'RIGHT →';
+                el.poseIndicator.className = 'pose-indicator right';
+            } else {
+                state.steeringPose = 'center';
+                el.poseIndicator.textContent = 'STRAIGHT';
+                el.poseIndicator.className = 'pose-indicator ready';
+            }
+
+            if (state.roundActive || state.calibrationActive) updateCarLane();
+        }
+
+        function updateCarLane() {
+            if (state.steeringPose === 'left' && state.currentLane > 0 && state.lastSteer !== 'left') {
+                state.currentLane--;
+                state.lastSteer = 'left';
+            } else if (state.steeringPose === 'right' && state.currentLane < 2 && state.lastSteer !== 'right') {
+                state.currentLane++;
+                state.lastSteer = 'right';
+            } else if (state.steeringPose === 'center') {
+                state.lastSteer = 'center';
+            }
+
+            el.playerCar.className = `player-car lane-${state.currentLane}`;
+            if (state.steeringPose === 'left') el.playerCar.classList.add('turning-left');
+            if (state.steeringPose === 'right') el.playerCar.classList.add('turning-right');
+        }
+
+        // Calibration with actual car movement
+        async function runCalibration() {
+            state.calibrationActive = true;
+            state.currentLane = 1;
+            el.playerCar.className = 'player-car lane-1';
+
+            // Test LEFT
+            el.calibrationPrompt.classList.add('show');
+            el.calibrationText.textContent = 'STEER LEFT';
+            el.calibrationText.className = 'calibration-text left';
+            el.calibrationSub.textContent = 'move the car left';
+
+            await waitForLane(0);
+
+            el.calibrationText.textContent = '✓';
+            el.calibrationText.className = 'calibration-text ready';
+            await sleep(400);
+
+            // Test RIGHT
+            el.calibrationText.textContent = 'STEER RIGHT';
+            el.calibrationText.className = 'calibration-text right';
+            el.calibrationSub.textContent = 'move the car right';
+
+            await waitForLane(2);
+
+            el.calibrationText.textContent = '✓';
+            el.calibrationText.className = 'calibration-text ready';
+            await sleep(400);
+
+            // Center
+            el.calibrationText.textContent = 'CENTER';
+            el.calibrationText.className = 'calibration-text';
+            el.calibrationSub.textContent = 'return to middle';
+
+            await waitForLane(1);
+
+            el.calibrationPrompt.classList.remove('show');
+            state.calibrationActive = false;
+            await sleep(300);
+        }
+
+        function waitForLane(lane) {
+            return new Promise(resolve => {
+                const check = setInterval(() => {
+                    if (state.currentLane === lane) {
+                        clearInterval(check);
+                        resolve();
+                    }
+                }, 50);
+            });
+        }
+
+        // Cool countdown
+        async function runCountdown() {
+            const phrases = [
+                { text: 'BUCKLE UP', class: 'phrase phrase1' },
+                { text: 'HANDS ON WHEEL', class: 'phrase phrase2' },
+                { text: "DON'T CRASH", class: 'phrase phrase3' },
+                { text: 'GO!', class: 'go' }
+            ];
+
+            el.countdownContainer.classList.add('show');
+
+            for (const phrase of phrases) {
+                el.countdownText.textContent = phrase.text;
+                el.countdownText.className = 'countdown-text ' + phrase.class;
+                await sleep(phrase.text === 'GO!' ? 600 : 900);
+            }
+
+            el.countdownContainer.classList.remove('show');
+            await sleep(300);
+        }
+
+        // Drink cue - subtle slide
+        function showDrinkCue(text, sub) {
+            el.drinkCueText.textContent = text;
+            el.drinkCueSub.textContent = sub;
+            el.drinkCue.classList.add('show');
+            setTimeout(() => el.drinkCue.classList.remove('show'), 2500);
+        }
+
+        async function startGame() {
+            state.players = getPlayers();
+            state.currentPlayerIndex = 0;
+            state.chain = 0;
+            state.bestChain = 0;
+            state.crashes = {};
+            state.calibrated = {}; // Reset calibration tracking
+            state.players.forEach(p => {
+                state.crashes[p] = 0;
+                state.calibrated[p] = false;
+            });
+            state.currentLane = 1;
+            state.gameSpeed = 0.6; // Start slow
+            state.obstacles = [];
+            state.obstacleCount = 0;
+
+            el.chainNumber.textContent = '0';
+            el.obstaclesLayer.innerHTML = '';
+            el.road.className = 'road';
+            el.playerCar.className = 'player-car lane-1';
+
+            showScreen('game');
+            updateDriver();
+            updateSpeedStatus();
+            renderPlayerQueue();
+
+            // Calibrate first player
+            const currentPlayer = state.players[state.currentPlayerIndex];
+            await runCalibration();
+            state.calibrated[currentPlayer] = true;
+
+            await runCountdown();
+
+            // Brief warmup
+            state.warmupActive = true;
+            state.roundActive = true;
+            showMessage('GO', 'chain');
+            await sleep(1500);
+            state.warmupActive = false;
+
+            spawnLoop();
+        }
+
+        function updateDriver() {
+            el.driverName.textContent = state.players[state.currentPlayerIndex];
+            renderPlayerQueue();
+        }
+
+        function spawnLoop() {
+            if (!state.roundActive || state.warmupActive) return;
+            const lanes = [0, 1, 2];
+            // Less aggressive targeting early on
+            let lane = Math.random() > 0.5 ? state.currentLane : lanes[Math.floor(Math.random() * lanes.length)];
+            createObstacle(lane);
+            state.obstacleCount++;
+            // Much longer delays - minimum 1200ms, scales down slowly
+            const delay = Math.max(1200, 2800 / state.gameSpeed);
+            setTimeout(spawnLoop, delay);
+        }
+
+        function createObstacle(lane) {
+            const id = state.obstacleId++;
+            const colors = ['red', 'yellow', 'green'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const obs = document.createElement('div');
+            obs.className = `obstacle ${color} lane-${lane}`;
+            obs.style.top = '0%';
+            obs.style.transform = 'scale(0.3)';
+            el.obstaclesLayer.appendChild(obs);
+            state.obstacles.push({ id, lane, el: obs, progress: 0 });
+            state.nearMissShown[id] = false;
+            animateObstacle(id);
+        }
+
+        function animateObstacle(id) {
+            const obs = state.obstacles.find(o => o.id === id);
+            if (!obs || !state.roundActive) return;
+
+            // Slower base movement - cars come at you more gently
+            obs.progress += 1.0 * state.gameSpeed;
+            const scale = 0.3 + (obs.progress / 100) * 1.2;
+            obs.el.style.top = obs.progress + '%';
+            obs.el.style.transform = `scale(${Math.min(scale, 1.5)})`;
+
+            if (obs.progress > 70 && obs.progress < 92) {
+                if (obs.lane === state.currentLane) { crash(); return; }
+                else if (!state.nearMissShown[id] && Math.abs(obs.lane - state.currentLane) === 1 && obs.progress > 75) {
+                    showNearMiss();
+                    state.nearMissShown[id] = true;
+                }
+            }
+
+            if (obs.progress > 105) {
+                obs.el.remove();
+                state.obstacles = state.obstacles.filter(o => o.id !== id);
+                delete state.nearMissShown[id];
+                state.chain++;
+                el.chainNumber.textContent = state.chain;
+                if (state.chain > state.bestChain) state.bestChain = state.chain;
+                updateDifficulty();
+                checkChainBonus();
+                return;
+            }
+
+            requestAnimationFrame(() => animateObstacle(id));
+        }
+
+        function updateDifficulty() {
+            const prevSpeed = state.gameSpeed;
+
+            // Very gentle ramp - let players breathe
+            if (state.chain <= 5) {
+                state.gameSpeed = 0.6; // Super chill start
+            }
+            else if (state.chain <= 10) {
+                if (prevSpeed < 0.8) showMessage('WARMING UP', 'chain');
+                state.gameSpeed = 0.8;
+            }
+            else if (state.chain <= 15) {
+                if (prevSpeed < 1) showMessage("LET'S GO", 'chain');
+                state.gameSpeed = 1;
+            }
+            else if (state.chain <= 25) {
+                if (prevSpeed < 1.2) showMessage('PICKING UP', 'chain');
+                state.gameSpeed = 1.2;
+            }
+            else if (state.chain <= 35) {
+                if (prevSpeed < 1.5) showMessage('COOKING NOW', 'chain');
+                state.gameSpeed = 1.5;
+                el.road.className = 'road fast';
+            }
+            else {
+                if (prevSpeed < 1.8) showMessage('HOLD ON', 'crash');
+                state.gameSpeed = 1.8;
+                el.road.className = 'road insane';
+            }
+            updateSpeedStatus();
+        }
+
+        function updateSpeedStatus() {
+            if (state.gameSpeed >= 1.8) { el.speedStatus.textContent = 'INTENSE'; el.speedStatus.className = 'speed-status insane'; }
+            else if (state.gameSpeed >= 1.5) { el.speedStatus.textContent = 'FAST'; el.speedStatus.className = 'speed-status fast'; }
+            else if (state.gameSpeed >= 1.2) { el.speedStatus.textContent = 'CRUISING'; el.speedStatus.className = 'speed-status medium'; }
+            else if (state.gameSpeed >= 1) { el.speedStatus.textContent = 'SMOOTH'; el.speedStatus.className = 'speed-status'; }
+            else { el.speedStatus.textContent = 'CHILL'; el.speedStatus.className = 'speed-status'; }
+        }
+
+        function checkChainBonus() {
+            if (state.chain === 10) { showMessage('10 CHAIN!', 'chain'); showDrinkCue('PICK SOMEONE', 'make them drink'); }
+            else if (state.chain === 25) { showMessage('LEGEND!', 'chain'); showDrinkCue('PICK 2 PEOPLE', 'they drink'); }
+        }
+
+        function showNearMiss() {
+            el.nearMiss.classList.remove('show');
+            void el.nearMiss.offsetWidth;
+            el.nearMiss.classList.add('show');
+        }
+
+        function crash() {
+            state.roundActive = false;
+            const player = state.players[state.currentPlayerIndex];
+            state.crashes[player]++;
+
+            el.crashFlash.classList.add('show');
+            showMessage('CRASH!', 'crash');
+            document.body.classList.add('shake');
+
+            setTimeout(() => { el.crashFlash.classList.remove('show'); document.body.classList.remove('shake'); }, 400);
+
+            el.obstaclesLayer.innerHTML = '';
+            state.obstacles = [];
+
+            if (state.crashes[player] >= 3) { showDrinkCue('BOTTOMS UP', "you're out!"); }
+            else { showDrinkCue('DRINK', '1 sip'); }
+
+            setTimeout(nextPlayer, 2500);
+        }
+
+        async function nextPlayer() {
+            state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+
+            if (state.players.every(p => state.crashes[p] >= 3)) { endGame(); return; }
+
+            while (state.crashes[state.players[state.currentPlayerIndex]] >= 3) {
+                state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+            }
+
+            const currentPlayer = state.players[state.currentPlayerIndex];
+
+            state.chain = 0;
+            state.currentLane = 1;
+            state.gameSpeed = 0.6; // Start slow again
+            state.obstacleCount = 0;
+            el.chainNumber.textContent = '0';
+            el.playerCar.className = 'player-car lane-1';
+            el.road.className = 'road';
+            updateSpeedStatus();
+            updateDriver();
+
+            showMessage(currentPlayer, 'next');
+            await sleep(1200);
+
+            // Only calibrate if this player hasn't calibrated yet this game
+            if (!state.calibrated[currentPlayer]) {
+                await runCalibration();
+                state.calibrated[currentPlayer] = true;
+            }
+
+            await runCountdown();
+
+            // Quick warmup
+            state.warmupActive = true;
+            state.roundActive = true;
+            await sleep(1000);
+            state.warmupActive = false;
+
+            spawnLoop();
+        }
+
+        function endGame() {
+            state.roundActive = false;
+            let maxCrashes = 0, worstDrivers = [];
+            state.players.forEach(p => {
+                if (state.crashes[p] > maxCrashes) { maxCrashes = state.crashes[p]; worstDrivers = [p]; }
+                else if (state.crashes[p] === maxCrashes) { worstDrivers.push(p); }
+            });
+
+            el.resultTitle.textContent = state.bestChain >= 15 ? 'PARKED' : 'TOTALED';
+            el.resultTitle.className = 'result-title ' + (state.bestChain >= 15 ? 'good' : 'bad');
+
+            let statsHtml = `best chain: <span class="hl">${state.bestChain}</span><br><br>`;
+            state.players.forEach(p => { statsHtml += `${p}: ${state.crashes[p] || 0} crashes<br>`; });
+            el.resultStats.innerHTML = statsHtml;
+            el.resultPenalty.innerHTML = `${worstDrivers.join(' & ')}<br>BOTTOMS UP`;
+
+            showScreen('result');
+        }
+
+        function showMessage(text, type) {
+            el.gameMessage.textContent = text;
+            el.gameMessage.className = 'game-message show ' + type;
+            setTimeout(() => el.gameMessage.classList.remove('show'), 700);
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        document.getElementById('play-btn').onclick = () => showScreen('instructions');
+        document.getElementById('got-it-btn').onclick = () => showScreen('setup');
+        document.getElementById('add-player-btn').onclick = addPlayerInput;
+        document.getElementById('start-btn').onclick = async () => { await initMediaPipe(); startGame(); };
+        document.getElementById('menu-btn').onclick = () => { state.roundActive = false; showScreen('landing'); };
+        document.getElementById('again-btn').onclick = startGame;
+    </script>
+</body>
+</html>
