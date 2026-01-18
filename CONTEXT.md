@@ -41,11 +41,11 @@ GitHub: https://github.com/jayfranco999/steer-clear
 | 36+ | 1.8x | INTENSE |
 
 ### Drinking Rules (In-Game)
-- Crash = 1 sip
-- 2 crashes (you're out) = BOTTOMS UP
+- 2 lives per round
+- 1st crash = 1 sip, keep playing
+- 2nd crash = BOTTOMS UP, next player
 - Chain of 10 = Pick someone to drink
 - Chain of 25 = Pick 2 people
-- Most crashes at end = BOTTOMS UP
 
 ---
 
@@ -54,18 +54,10 @@ GitHub: https://github.com/jayfranco999/steer-clear
 ### Chaos Modes (triggers every 3rd dodge after warmup)
 | Mode | Chance | Effect |
 |------|--------|--------|
-| REVERSED | 20% | Controls flip for 5 dodges. HUGE persistent popup stays centered. |
-| POTHOLE | 15% | Violent screen shake + car spawns right after. |
-| DRUNK DRIVER | 20% | Car swerves between lanes. Spawns in YOUR lane with taunting messages. |
+| REVERSED | 25% | Controls flip for 5 dodges. Simple indicator at top. |
+| DRUNK DRIVER | 25% | Car swerves between lanes. Spawns in YOUR lane. |
 | CONVOY | 25% | 3 cars spawn rapid-fire (400ms apart). |
-| WIDE LOAD | 20% | Truck spans 2 lanes, only one escape route. |
-
-### Visual Chaos (progressive)
-| Chain | Effect |
-|-------|--------|
-| 15+ | Drunk Vision - subtle screen wobble |
-| 25+ | Tunnel Vision - edges darken |
-| 35+ | Neon Overload - colors intensify |
+| WIDE LOAD | 25% | Truck spans 2 lanes, only one escape route. |
 
 ### Hype Messages
 - Chain 5: "NOT BAD"
@@ -218,13 +210,14 @@ obs.progress += 1.0 * state.gameSpeed;
   - 35+: neon overload (colors intensify)
 - **Hype messages** at milestones (5, 10, 15, 20, 30, 40, 50)
 
-### v2.1 - Feedback Polish (Jan 2025)
-- **REVERSED indicator** - Now a HUGE centered popup that stays until it clears
-- **LIGHTS OUT → POTHOLE** - Replaced with violent screen shake + car spawn (fairer)
-- **2 lives** - Changed from 3 crashes to 2 crashes per player
-- **DRUNK DRIVER taunts** - Random taunting messages ("MOVE. NOW.", "get out the way", etc.)
-- **DRUNK DRIVER spawns in YOUR lane** - Forces you to move
+### v2.1 - Lag Fix & Lives (Jan 2025)
+- **2 lives per ROUND** - Crash once = keep playing, crash twice = next player
+- **Removed pothole** - Was useless, redistributed to other modes (25% each)
+- **Stripped all animations** - No more lag from reversed/chaos popups
+- **Removed visual chaos effects** - drunk-vision, tunnel-vision, neon-overload gone
+- **Fixed drunk driver** - No longer spawns extra car
+- **Fixed persistent car icons** - Obstacles properly clean up
 
 ---
 
-*Last updated: Jan 2025 - v2.1 Feedback Polish*
+*Last updated: Jan 2025 - v2.1 Lag Fix*
