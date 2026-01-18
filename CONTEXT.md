@@ -7,7 +7,7 @@ GitHub: https://github.com/jayfranco999/steer-clear
 
 ---
 
-## Current State (v1.1 - Jan 2025)
+## Current State (v2.0 - Jan 2025)
 
 ### What's Working
 - Full gesture-controlled driving game
@@ -15,7 +15,10 @@ GitHub: https://github.com/jayfranco999/steer-clear
 - 3-lane road with perspective obstacles
 - Hot-seat multiplayer (2-8 players)
 - Calibration test drive (once per player per game)
-- Gradual speed progression (CHILL → SMOOTH → CRUISING → FAST → INTENSE)
+- Progressive speed (2% per dodge, caps at 1.8x)
+- **5 chaos mechanics** (REVERSED, LIGHTS OUT, DRUNK DRIVER, CONVOY, WIDE LOAD)
+- **Visual chaos effects** (drunk vision, tunnel vision, neon overload at high chains)
+- **Hype messages** at milestones
 - Drinking rules integrated with center pop-up cues
 - Clean unified visual aesthetic (landing + game)
 - Camera capture 1280x720 (wide FOV)
@@ -39,56 +42,48 @@ GitHub: https://github.com/jayfranco999/steer-clear
 
 ### Drinking Rules (In-Game)
 - Crash = 1 sip
-- 3 crashes (you're out) = BOTTOMS UP
+- 2 crashes (you're out) = BOTTOMS UP
 - Chain of 10 = Pick someone to drink
 - Chain of 25 = Pick 2 people
 - Most crashes at end = BOTTOMS UP
 
 ---
 
-## CHAOS LAYERS (TODO - Future Iterations)
+## CHAOS MECHANICS (IMPLEMENTED)
 
-### Layer 1: Visual Chaos (Chain 15+)
-Add screen effects as chain builds to disorient player:
-- **Drunk Vision**: Subtle screen wobble/sway
-- **Tunnel Vision**: Vignette edges darken
-- **Neon Overload**: Colors intensify, bloom effects
-- **Screen Tilt**: Slight rotation of game view
+### Chaos Modes (triggers every 3rd dodge after warmup)
+| Mode | Chance | Effect |
+|------|--------|--------|
+| REVERSED | 20% | Controls flip for 5 dodges. HUGE persistent popup stays centered. |
+| POTHOLE | 15% | Violent screen shake + car spawns right after. |
+| DRUNK DRIVER | 20% | Car swerves between lanes. Spawns in YOUR lane with taunting messages. |
+| CONVOY | 25% | 3 cars spawn rapid-fire (400ms apart). |
+| WIDE LOAD | 20% | Truck spans 2 lanes, only one escape route. |
 
-Implementation:
-```css
-.drunk-vision { animation: wobble 2s ease-in-out infinite; }
-.tunnel-vision { box-shadow: inset 0 0 150px rgba(0,0,0,0.8); }
-```
+### Visual Chaos (progressive)
+| Chain | Effect |
+|-------|--------|
+| 15+ | Drunk Vision - subtle screen wobble |
+| 25+ | Tunnel Vision - edges darken |
+| 35+ | Neon Overload - colors intensify |
 
-### Layer 2: Obstacle Variety
-Add new obstacle types beyond basic cars:
-- **Wide Trucks**: Span 2 lanes, force specific dodge direction
-- **Swerving Cars**: Move between lanes as they approach
-- **Motorcycles**: Faster, smaller, harder to track
-- **Broken Down Car**: Stationary, appears suddenly
-
-Implementation: Add `obstacle.wide`, `obstacle.swerving` classes with different behaviors in animateObstacle()
-
-### Layer 3: Hype Messages
-Flash encouraging/taunting messages at milestones:
+### Hype Messages
 - Chain 5: "NOT BAD"
 - Chain 10: "GETTING SPICY"
 - Chain 15: "UNKILLABLE"
 - Chain 20: "JESUS TAKE THE WHEEL"
 - Chain 30: "ARE YOU EVEN HUMAN?"
 - Chain 40: "LEGEND STATUS"
+- Chain 50: "LITERALLY IMPOSSIBLE"
 
-### Layer 4: Audio Cues (Optional)
-- Engine revving that increases with speed
-- Tire screech on lane change
-- Crash sound effect
-- Crowd cheering at high chains
+### Speed Progression
+- Starts at 0.7x, increases 2% per dodge
+- Caps at 1.8x (reached around chain 55)
+- Resets per player
 
-### Layer 5: Power-ups (Maybe Later)
-- **Shield**: Survive one crash
-- **Slow-Mo**: Temporary speed reduction
-- **Lane Lock**: Obstacles only spawn in other lanes briefly
+### Future Additions (Maybe)
+- **Audio cues**: Engine revving, tire screech, crash sounds
+- **Power-ups**: Shield (survive crash), Slow-Mo, Lane Lock
 
 ---
 
@@ -208,6 +203,28 @@ obs.progress += 1.0 * state.gameSpeed;
 - **Camera preview**: 240x170 → 320x180 (16:9 ratio)
 - **object-fit**: cover → contain (proper aspect ratio)
 
+### v2.0 - CHAOS UPDATE (Jan 2025)
+- **Removed time-based warmup** - chaos starts after 2 dodges
+- **Progressive speed** - 2% per dodge, starts at 0.7x, caps at 1.8x
+- **5 chaos mechanics**:
+  - REVERSED (20%) - controls flip for 5 dodges
+  - LIGHTS OUT (15%) - road goes dark for 3 dodges
+  - DRUNK DRIVER (20%) - car swerves between lanes
+  - CONVOY (25%) - 3 cars rapid-fire
+  - WIDE LOAD (20%) - truck spans 2 lanes
+- **Visual chaos effects** at high chains:
+  - 15+: drunk vision (subtle wobble)
+  - 25+: tunnel vision (edges darken)
+  - 35+: neon overload (colors intensify)
+- **Hype messages** at milestones (5, 10, 15, 20, 30, 40, 50)
+
+### v2.1 - Feedback Polish (Jan 2025)
+- **REVERSED indicator** - Now a HUGE centered popup that stays until it clears
+- **LIGHTS OUT → POTHOLE** - Replaced with violent screen shake + car spawn (fairer)
+- **2 lives** - Changed from 3 crashes to 2 crashes per player
+- **DRUNK DRIVER taunts** - Random taunting messages ("MOVE. NOW.", "get out the way", etc.)
+- **DRUNK DRIVER spawns in YOUR lane** - Forces you to move
+
 ---
 
-*Last updated: Jan 2025 - v1.1*
+*Last updated: Jan 2025 - v2.1 Feedback Polish*

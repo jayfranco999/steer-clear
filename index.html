@@ -461,13 +461,8 @@
         .chain-number { font-size: 36px; color: #ffcc00; text-shadow: 0 0 20px rgba(255,204,0,0.5); line-height: 1; }
         .chain-label { font-size: 7px; color: rgba(255,255,255,0.4); }
 
-        .speed-display { text-align: right; }
-        .speed-status { font-size: 10px; color: #00ff00; text-shadow: 0 0 8px currentColor; }
-        .speed-status.medium { color: #ffcc00; }
-        .speed-status.fast { color: #ff6600; }
-        .speed-status.insane { color: #ff3333; animation: pulse 0.5s infinite; }
-
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .lives-display { text-align: right; }
+        .lives-icons { font-size: 24px; letter-spacing: 5px; }
 
         /* Road Area - fills screen */
         .road-area {
@@ -556,6 +551,21 @@
         .obstacle.lane-0 { left: 10%; }
         .obstacle.lane-1 { left: 43%; }
         .obstacle.lane-2 { left: 76%; }
+
+        /* Wide truck - spans 2 lanes */
+        .obstacle.wide {
+            width: 140px;
+            height: 130px;
+            background: linear-gradient(180deg, #666 0%, #333 100%);
+            color: #888;
+            border-radius: 8px 8px 4px 4px;
+        }
+        .obstacle.wide::before {
+            height: 50px;
+            top: 15px;
+        }
+        .obstacle.wide.lanes-01 { left: 10%; }
+        .obstacle.wide.lanes-12 { left: 43%; }
 
         /* Player Car */
         .player-car {
@@ -874,6 +884,70 @@
             80% { transform: translateX(10px); }
         }
         .shake { animation: shake 0.4s ease-in-out; }
+
+        /* ============ CHAOS EFFECTS ============ */
+
+        /* Reversed indicator - simple, no animations */
+        .reversed-indicator {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 28px;
+            color: #ff00ff;
+            z-index: 95;
+            opacity: 0;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 30px;
+            border: 3px solid #ff00ff;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .reversed-indicator.show {
+            opacity: 1;
+        }
+        .reversed-sub {
+            font-size: 12px;
+            color: #fff;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* Chaos popup - simple, no animations */
+        .chaos-popup {
+            position: fixed;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .chaos-popup.show {
+            opacity: 1;
+        }
+        .chaos-popup-text {
+            font-size: 42px;
+        }
+        .chaos-popup-sub {
+            font-size: 14px;
+            color: #fff;
+            margin-top: 8px;
+        }
+
+        /* Chaos type colors */
+        .chaos-popup.reversed .chaos-popup-text { color: #ff00ff; text-shadow: 0 0 40px #ff00ff; }
+        .chaos-popup.convoy .chaos-popup-text { color: #ff6600; text-shadow: 0 0 40px #ff6600; }
+        .chaos-popup.wide .chaos-popup-text { color: #ffcc00; text-shadow: 0 0 40px #ffcc00; }
+        .chaos-popup.swerve .chaos-popup-text { color: #00ffff; text-shadow: 0 0 40px #00ffff; }
+
+        /* Swerving obstacle animation */
+        .obstacle.swerving {
+            transition: left 0.4s ease-in-out;
+        }
+
     </style>
 </head>
 <body>
@@ -928,7 +1002,7 @@
         <div class="drink-rules-box">
             <div class="drink-rules-title">DRINKING RULES</div>
             <div class="drink-rule-item"><span>Crash</span><span class="penalty">1 sip</span></div>
-            <div class="drink-rule-item"><span>3 crashes (you're out)</span><span class="penalty">BOTTOMS UP</span></div>
+            <div class="drink-rule-item"><span>2 crashes (you're out)</span><span class="penalty">BOTTOMS UP</span></div>
             <div class="drink-rule-item"><span>Chain of 10+</span><span class="penalty">Pick someone to drink</span></div>
             <div class="drink-rule-item"><span>Most crashes</span><span class="penalty">BOTTOMS UP</span></div>
         </div>
@@ -960,8 +1034,8 @@
                     <div class="chain-number" id="chain-number">0</div>
                     <div class="chain-label">CHAIN</div>
                 </div>
-                <div class="speed-display">
-                    <div class="speed-status" id="speed-status">CRUISING</div>
+                <div class="lives-display">
+                    <div class="lives-icons" id="lives-icons">❤️❤️</div>
                 </div>
             </div>
 
@@ -1018,6 +1092,14 @@
         <div class="drink-cue-text" id="drink-cue-text">DRINK</div>
         <div class="drink-cue-sub" id="drink-cue-sub">1 sip</div>
     </div>
+    <div class="reversed-indicator" id="reversed-indicator">
+        ⟷ REVERSED ⟷
+        <span class="reversed-sub">left is right, right is left</span>
+    </div>
+    <div class="chaos-popup" id="chaos-popup">
+        <div class="chaos-popup-text" id="chaos-popup-text">CHAOS</div>
+        <div class="chaos-popup-sub" id="chaos-popup-sub">good luck</div>
+    </div>
 
     <!-- MediaPipe -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
@@ -1030,7 +1112,7 @@
             chain: 0,
             bestChain: 0,
             crashes: {},
-            calibrated: {}, // Track who has done calibration
+            calibrated: {},
             currentLane: 1,
             obstacles: [],
             obstacleId: 0,
@@ -1041,7 +1123,11 @@
             lastSteer: 'center',
             nearMissShown: {},
             obstacleCount: 0,
-            warmupActive: false
+            warmupCount: 0,
+            // Chaos state
+            reversed: false,
+            reversedUntil: 0,
+            chaosActive: false
         };
 
         const screens = {
@@ -1060,7 +1146,6 @@
             poseIndicator: document.getElementById('pose-indicator'),
             chainNumber: document.getElementById('chain-number'),
             driverName: document.getElementById('driver-name'),
-            speedStatus: document.getElementById('speed-status'),
             playerQueue: document.getElementById('player-queue'),
             nearMiss: document.getElementById('near-miss'),
             crashFlash: document.getElementById('crash-flash'),
@@ -1077,8 +1162,20 @@
             calibrationSub: document.getElementById('calibration-sub'),
             drinkCue: document.getElementById('drink-cue'),
             drinkCueText: document.getElementById('drink-cue-text'),
-            drinkCueSub: document.getElementById('drink-cue-sub')
+            drinkCueSub: document.getElementById('drink-cue-sub'),
+            reversedIndicator: document.getElementById('reversed-indicator'),
+            chaosPopup: document.getElementById('chaos-popup'),
+            chaosPopupText: document.getElementById('chaos-popup-text'),
+            chaosPopupSub: document.getElementById('chaos-popup-sub'),
+            livesIcons: document.getElementById('lives-icons')
         };
+
+        function updateLives() {
+            const player = state.players[state.currentPlayerIndex];
+            const crashes = state.crashes[player] || 0;
+            const livesLeft = 2 - crashes;
+            el.livesIcons.textContent = '❤️'.repeat(Math.max(0, livesLeft)) + '🖤'.repeat(crashes);
+        }
 
         function showScreen(name) {
             Object.values(screens).forEach(s => s.classList.remove('active'));
@@ -1119,8 +1216,8 @@
             el.playerQueue.innerHTML = '';
             state.players.forEach((p, i) => {
                 const div = document.createElement('div');
-                div.className = 'queue-player' + (i === state.currentPlayerIndex ? ' active' : '') + (state.crashes[p] >= 3 ? ' out' : '');
-                div.textContent = p + (state.crashes[p] ? ` x${state.crashes[p]}` : '');
+                div.className = 'queue-player' + (i === state.currentPlayerIndex ? ' active' : '');
+                div.textContent = p;
                 el.playerQueue.appendChild(div);
             });
         }
@@ -1161,15 +1258,19 @@
                 return;
             }
 
-            const tilt = leftWrist.y - rightWrist.y;
+            let tilt = leftWrist.y - rightWrist.y;
+
+            // Reverse controls if chaos mode active
+            if (state.reversed) tilt = -tilt;
+
             // Higher threshold = needs more deliberate swerve to register
             if (tilt > 0.12) {
                 state.steeringPose = 'left';
-                el.poseIndicator.textContent = '← LEFT';
+                el.poseIndicator.textContent = state.reversed ? '← LEFT (!)' : '← LEFT';
                 el.poseIndicator.className = 'pose-indicator left';
             } else if (tilt < -0.12) {
                 state.steeringPose = 'right';
-                el.poseIndicator.textContent = 'RIGHT →';
+                el.poseIndicator.textContent = state.reversed ? 'RIGHT (!) →' : 'RIGHT →';
                 el.poseIndicator.className = 'pose-indicator right';
             } else {
                 state.steeringPose = 'center';
@@ -1283,15 +1384,21 @@
             state.chain = 0;
             state.bestChain = 0;
             state.crashes = {};
-            state.calibrated = {}; // Reset calibration tracking
+            state.calibrated = {};
             state.players.forEach(p => {
                 state.crashes[p] = 0;
                 state.calibrated[p] = false;
             });
             state.currentLane = 1;
-            state.gameSpeed = 0.6; // Start slow
+            state.gameSpeed = 0.7;
             state.obstacles = [];
             state.obstacleCount = 0;
+            state.warmupCount = 0;
+            // Reset chaos state
+            state.reversed = false;
+            state.reversedUntil = 0;
+            state.chaosActive = false;
+            el.reversedIndicator.classList.remove('show');
 
             el.chainNumber.textContent = '0';
             el.obstaclesLayer.innerHTML = '';
@@ -1300,7 +1407,7 @@
 
             showScreen('game');
             updateDriver();
-            updateSpeedStatus();
+            updateLives();
             renderPlayerQueue();
 
             // Calibrate first player
@@ -1310,12 +1417,8 @@
 
             await runCountdown();
 
-            // Brief warmup
-            state.warmupActive = true;
             state.roundActive = true;
             showMessage('GO', 'chain');
-            await sleep(1500);
-            state.warmupActive = false;
 
             spawnLoop();
         }
@@ -1325,50 +1428,98 @@
             renderPlayerQueue();
         }
 
-        function spawnLoop() {
-            if (!state.roundActive || state.warmupActive) return;
-            const lanes = [0, 1, 2];
-            // Less aggressive targeting early on
-            let lane = Math.random() > 0.5 ? state.currentLane : lanes[Math.floor(Math.random() * lanes.length)];
-            createObstacle(lane);
+        async function spawnLoop() {
+            if (!state.roundActive) return;
+
+            let chaosSpawned = false;
+
+            // Check if we should trigger chaos (after warmup of 2 cars)
+            if (state.chain >= 2 && state.chain % 3 === 0 && !state.chaosActive) {
+                chaosSpawned = await maybeChaos();
+            }
+
+            // Only spawn regular car if chaos didn't already spawn one
+            if (!chaosSpawned) {
+                const lanes = [0, 1, 2];
+                let lane = Math.random() > 0.4 ? state.currentLane : lanes[Math.floor(Math.random() * lanes.length)];
+                createObstacle(lane);
+            }
             state.obstacleCount++;
-            // Much longer delays - minimum 1200ms, scales down slowly
-            const delay = Math.max(1200, 2800 / state.gameSpeed);
+
+            // Delay scales with speed - minimum 900ms at high speeds
+            const delay = Math.max(900, 2200 / state.gameSpeed);
             setTimeout(spawnLoop, delay);
         }
 
-        function createObstacle(lane) {
+        function createObstacle(lane, options = {}) {
             const id = state.obstacleId++;
             const colors = ['red', 'yellow', 'green'];
-            const color = colors[Math.floor(Math.random() * colors.length)];
+            const color = options.color || colors[Math.floor(Math.random() * colors.length)];
             const obs = document.createElement('div');
-            obs.className = `obstacle ${color} lane-${lane}`;
+
+            // Handle wide trucks (span 2 lanes)
+            if (options.wide) {
+                const laneClass = lane === 0 ? 'lanes-01' : 'lanes-12';
+                obs.className = `obstacle wide ${laneClass}`;
+                state.obstacles.push({ id, lane, el: obs, progress: 0, wide: true, lanes: lane === 0 ? [0,1] : [1,2] });
+            }
+            // Handle swerving cars
+            else if (options.swerving) {
+                obs.className = `obstacle ${color} lane-${lane} swerving`;
+                state.obstacles.push({ id, lane, el: obs, progress: 0, swerving: true, originalLane: lane });
+            }
+            else {
+                obs.className = `obstacle ${color} lane-${lane}`;
+                state.obstacles.push({ id, lane, el: obs, progress: 0 });
+            }
+
             obs.style.top = '0%';
             obs.style.transform = 'scale(0.3)';
             el.obstaclesLayer.appendChild(obs);
-            state.obstacles.push({ id, lane, el: obs, progress: 0 });
             state.nearMissShown[id] = false;
             animateObstacle(id);
+            return id;
         }
 
         function animateObstacle(id) {
             const obs = state.obstacles.find(o => o.id === id);
-            if (!obs || !state.roundActive) return;
+            if (!obs) return;
 
-            // Slower base movement - cars come at you more gently
+            // If round ended, remove this obstacle
+            if (!state.roundActive) {
+                obs.el.remove();
+                state.obstacles = state.obstacles.filter(o => o.id !== id);
+                return;
+            }
+
             obs.progress += 1.0 * state.gameSpeed;
             const scale = 0.3 + (obs.progress / 100) * 1.2;
             obs.el.style.top = obs.progress + '%';
             obs.el.style.transform = `scale(${Math.min(scale, 1.5)})`;
 
+            // Handle swerving - change lanes at 40% progress
+            if (obs.swerving && obs.progress > 40 && obs.progress < 42) {
+                const newLane = obs.originalLane === 0 ? 1 : (obs.originalLane === 2 ? 1 : (Math.random() > 0.5 ? 0 : 2));
+                obs.lane = newLane;
+                obs.el.className = obs.el.className.replace(/lane-\d/, `lane-${newLane}`);
+            }
+
+            // Collision detection zone
             if (obs.progress > 70 && obs.progress < 92) {
-                if (obs.lane === state.currentLane) { crash(); return; }
+                // Wide truck collision - check both lanes
+                if (obs.wide) {
+                    if (obs.lanes.includes(state.currentLane)) { crash(); return; }
+                }
+                // Normal car collision
+                else if (obs.lane === state.currentLane) { crash(); return; }
+                // Near miss
                 else if (!state.nearMissShown[id] && Math.abs(obs.lane - state.currentLane) === 1 && obs.progress > 75) {
                     showNearMiss();
                     state.nearMissShown[id] = true;
                 }
             }
 
+            // Obstacle passed - count as dodge
             if (obs.progress > 105) {
                 obs.el.remove();
                 state.obstacles = state.obstacles.filter(o => o.id !== id);
@@ -1385,48 +1536,93 @@
         }
 
         function updateDifficulty() {
+            // Check if reversed mode should end
+            if (state.reversed && state.chain >= state.reversedUntil) {
+                state.reversed = false;
+                el.reversedIndicator.classList.remove('show');
+            }
+
+            // Progressive speed: 2% per dodge, starting at 0.7, cap at 1.8
+            const newSpeed = Math.min(1.8, 0.7 + (state.chain * 0.02));
             const prevSpeed = state.gameSpeed;
+            state.gameSpeed = newSpeed;
 
-            // Very gentle ramp - let players breathe
-            if (state.chain <= 5) {
-                state.gameSpeed = 0.6; // Super chill start
-            }
-            else if (state.chain <= 10) {
-                if (prevSpeed < 0.8) showMessage('WARMING UP', 'chain');
-                state.gameSpeed = 0.8;
-            }
-            else if (state.chain <= 15) {
-                if (prevSpeed < 1) showMessage("LET'S GO", 'chain');
-                state.gameSpeed = 1;
-            }
-            else if (state.chain <= 25) {
-                if (prevSpeed < 1.2) showMessage('PICKING UP', 'chain');
-                state.gameSpeed = 1.2;
-            }
-            else if (state.chain <= 35) {
-                if (prevSpeed < 1.5) showMessage('COOKING NOW', 'chain');
-                state.gameSpeed = 1.5;
-                el.road.className = 'road fast';
-            }
-            else {
-                if (prevSpeed < 1.8) showMessage('HOLD ON', 'crash');
-                state.gameSpeed = 1.8;
-                el.road.className = 'road insane';
-            }
-            updateSpeedStatus();
+            // Hype messages at milestones
+            if (state.chain === 5) showMessage('NOT BAD', 'chain');
+            else if (state.chain === 10) showMessage('GETTING SPICY', 'chain');
+            else if (state.chain === 15) showMessage('UNKILLABLE', 'chain');
+            else if (state.chain === 20) showMessage('JESUS TAKE THE WHEEL', 'chain');
+            else if (state.chain === 30) showMessage('ARE YOU EVEN HUMAN?', 'chain');
+            else if (state.chain === 40) showMessage('LEGEND STATUS', 'chain');
+            else if (state.chain === 50) showMessage('LITERALLY IMPOSSIBLE', 'chain');
+
+            // Update road visual based on speed
+            let roadClass = 'road';
+            if (state.gameSpeed >= 1.5) roadClass += ' insane';
+            else if (state.gameSpeed >= 1.2) roadClass += ' fast';
+            el.road.className = roadClass;
         }
 
-        function updateSpeedStatus() {
-            if (state.gameSpeed >= 1.8) { el.speedStatus.textContent = 'INTENSE'; el.speedStatus.className = 'speed-status insane'; }
-            else if (state.gameSpeed >= 1.5) { el.speedStatus.textContent = 'FAST'; el.speedStatus.className = 'speed-status fast'; }
-            else if (state.gameSpeed >= 1.2) { el.speedStatus.textContent = 'CRUISING'; el.speedStatus.className = 'speed-status medium'; }
-            else if (state.gameSpeed >= 1) { el.speedStatus.textContent = 'SMOOTH'; el.speedStatus.className = 'speed-status'; }
-            else { el.speedStatus.textContent = 'CHILL'; el.speedStatus.className = 'speed-status'; }
-        }
 
         function checkChainBonus() {
             if (state.chain === 10) { showMessage('10 CHAIN!', 'chain'); showDrinkCue('PICK SOMEONE', 'make them drink'); }
             else if (state.chain === 25) { showMessage('LEGEND!', 'chain'); showDrinkCue('PICK 2 PEOPLE', 'they drink'); }
+        }
+
+        // ============ CHAOS MECHANICS ============
+
+        function showChaosPopup(text, sub, type) {
+            el.chaosPopupText.textContent = text;
+            el.chaosPopupSub.textContent = sub;
+            el.chaosPopup.className = `chaos-popup show ${type}`;
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    el.chaosPopup.classList.remove('show');
+                    resolve();
+                }, 1200);
+            });
+        }
+
+        async function maybeChaos() {
+            if (state.chaosActive) return false;
+            state.chaosActive = true;
+
+            const roll = Math.random();
+            let spawnedObstacle = false;
+
+            // REVERSED - 25% chance - flip controls
+            if (roll < 0.25) {
+                await showChaosPopup('REVERSED', 'left is right', 'reversed');
+                state.reversed = true;
+                state.reversedUntil = state.chain + 5;
+                el.reversedIndicator.classList.add('show');
+            }
+            // DRUNK DRIVER - 25% chance - car swerves
+            else if (roll < 0.50) {
+                const taunts = ['MOVE. NOW.', 'get out the way', 'incoming drunk'];
+                await showChaosPopup('DRUNK DRIVER', taunts[Math.floor(Math.random() * taunts.length)], 'swerve');
+                createObstacle(state.currentLane, { swerving: true });
+                spawnedObstacle = true;
+            }
+            // CONVOY - 25% chance - rapid fire cars
+            else if (roll < 0.75) {
+                await showChaosPopup('CONVOY', 'incoming!', 'convoy');
+                const lanes = [0, 1, 2];
+                for (let i = 0; i < 3; i++) {
+                    createObstacle(lanes[Math.floor(Math.random() * lanes.length)]);
+                    await sleep(400);
+                }
+                spawnedObstacle = true;
+            }
+            // WIDE LOAD - 25% chance - truck spans 2 lanes
+            else {
+                await showChaosPopup('WIDE LOAD', 'pick a side', 'wide');
+                createObstacle(Math.random() > 0.5 ? 0 : 1, { wide: true });
+                spawnedObstacle = true;
+            }
+
+            state.chaosActive = false;
+            return spawnedObstacle;
         }
 
         function showNearMiss() {
@@ -1440,6 +1636,15 @@
             const player = state.players[state.currentPlayerIndex];
             state.crashes[player]++;
 
+            // Reset chaos state
+            state.reversed = false;
+            state.reversedUntil = 0;
+            state.chaosActive = false;
+            el.reversedIndicator.classList.remove('show');
+
+            // Update lives display
+            updateLives();
+
             el.crashFlash.classList.add('show');
             showMessage('CRASH!', 'crash');
             document.body.classList.add('shake');
@@ -1449,31 +1654,47 @@
             el.obstaclesLayer.innerHTML = '';
             state.obstacles = [];
 
-            if (state.crashes[player] >= 3) { showDrinkCue('BOTTOMS UP', "you're out!"); }
-            else { showDrinkCue('DRINK', '1 sip'); }
+            // 2 lives per round - only switch player after 2nd crash
+            if (state.crashes[player] >= 2) {
+                showDrinkCue('BOTTOMS UP', "you're out!");
+                setTimeout(nextPlayer, 2500);
+            } else {
+                showDrinkCue('DRINK', '1 sip - 1 life left');
+                // Continue same player
+                setTimeout(continueRound, 2000);
+            }
+        }
 
-            setTimeout(nextPlayer, 2500);
+        async function continueRound() {
+            state.roundActive = true;
+            state.currentLane = 1;
+            el.playerCar.className = 'player-car lane-1';
+            showMessage('GO', 'chain');
+            spawnLoop();
         }
 
         async function nextPlayer() {
             state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
-
-            if (state.players.every(p => state.crashes[p] >= 3)) { endGame(); return; }
-
-            while (state.crashes[state.players[state.currentPlayerIndex]] >= 3) {
-                state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
-            }
-
             const currentPlayer = state.players[state.currentPlayerIndex];
 
+            // Reset game state for new player
             state.chain = 0;
             state.currentLane = 1;
-            state.gameSpeed = 0.6; // Start slow again
+            state.gameSpeed = 0.7;
             state.obstacleCount = 0;
+            state.warmupCount = 0;
+            // Reset crashes for this player's new round (2 lives per round)
+            state.crashes[currentPlayer] = 0;
+            // Reset chaos state
+            state.reversed = false;
+            state.chaosActive = false;
+            state.reversedUntil = 0;
+            el.reversedIndicator.classList.remove('show');
+
             el.chainNumber.textContent = '0';
             el.playerCar.className = 'player-car lane-1';
             el.road.className = 'road';
-            updateSpeedStatus();
+            updateLives();
             updateDriver();
 
             showMessage(currentPlayer, 'next');
@@ -1487,17 +1708,17 @@
 
             await runCountdown();
 
-            // Quick warmup
-            state.warmupActive = true;
             state.roundActive = true;
-            await sleep(1000);
-            state.warmupActive = false;
-
             spawnLoop();
         }
 
         function endGame() {
             state.roundActive = false;
+            // Clean up chaos effects
+            state.reversed = false;
+            el.reversedIndicator.classList.remove('show');
+            el.road.className = 'road';
+
             let maxCrashes = 0, worstDrivers = [];
             state.players.forEach(p => {
                 if (state.crashes[p] > maxCrashes) { maxCrashes = state.crashes[p]; worstDrivers = [p]; }
@@ -1527,7 +1748,13 @@
         document.getElementById('got-it-btn').onclick = () => showScreen('setup');
         document.getElementById('add-player-btn').onclick = addPlayerInput;
         document.getElementById('start-btn').onclick = async () => { await initMediaPipe(); startGame(); };
-        document.getElementById('menu-btn').onclick = () => { state.roundActive = false; showScreen('landing'); };
+        document.getElementById('menu-btn').onclick = () => {
+            state.roundActive = false;
+            state.reversed = false;
+            el.reversedIndicator.classList.remove('show');
+            el.road.className = 'road';
+            showScreen('landing');
+        };
         document.getElementById('again-btn').onclick = startGame;
     </script>
 </body>
