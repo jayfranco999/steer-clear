@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍺 CEREMONY BOX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-dark: #0a0a0f;
+            --neon-cyan: #00ffff;
+            --neon-magenta: #ff00ff;
+            --neon-yellow: #ffff00;
+            --neon-green: #00ff88;
+            --text-white: #ffffff;
+            --danger: #ff3366;
+        }
+        
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background: linear-gradient(180deg, #0a0015 0%, #150030 50%, #0a0a15 100%);
+            color: var(--text-white);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            font-size: 36px;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 20px var(--neon-cyan), 4px 4px 0 var(--neon-magenta);
+            margin-bottom: 10px;
+        }
+        
+        .room-code {
+            font-size: 20px;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 10px var(--neon-yellow);
+            letter-spacing: 4px;
+        }
+        
+        /* Main layout */
+        .main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            padding: 20px 0;
+        }
+        
+        /* Games grid */
+        .games-section h2 {
+            font-size: 12px;
+            color: var(--neon-magenta);
+            margin-bottom: 20px;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .game-card:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            transform: scale(1.02);
+        }
+        
+        .game-card.selected {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
+            background: rgba(0, 255, 136, 0.1);
+        }
+        
+        .game-card.locked {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        
+        .game-icon { font-size: 48px; margin-bottom: 15px; }
+        .game-name { font-size: 10px; margin-bottom: 8px; }
+        .game-players { font-size: 8px; color: rgba(255,255,255,0.5); }
+        
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        
+        .panel h3 {
+            font-size: 10px;
+            color: var(--neon-magenta);
+            margin-bottom: 15px;
+        }
+        
+        /* QR */
+        .qr-container {
+            text-align: center;
+        }
+        
+        #qr-code {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .join-url {
+            font-size: 7px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        
+        /* Players */
+        .players-panel { flex: 1; }
+        
+        .player-count {
+            font-size: 8px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 15px;
+        }
+        
+        .player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .player-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+        
+        .player-emoji { font-size: 20px; }
+        .player-name { font-size: 9px; flex: 1; }
+        .player-ready { font-size: 7px; color: var(--neon-green); }
+        
+        .waiting-text {
+            font-size: 9px;
+            color: rgba(255,255,255,0.3);
+            text-align: center;
+            padding: 20px;
+        }
+        
+        /* Footer */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .camera-status {
+            font-size: 9px;
+            color: var(--neon-cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .camera-status.error { color: var(--danger); }
+        
+        .start-btn {
+            font-family: inherit;
+            font-size: 12px;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, var(--neon-green), #00cc6a);
+            border: none;
+            border-radius: 8px;
+            color: var(--bg-dark);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .start-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0,255,136,0.5);
+        }
+        
+        .start-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        /* Camera preview */
+        .camera-preview {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 180px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: #000;
+        }
+        
+        .camera-preview video {
+            width: 100%;
+            display: block;
+            transform: scaleX(-1);
+        }
+        
+        .camera-label {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            font-size: 7px;
+            background: rgba(0,0,0,0.7);
+            padding: 3px 6px;
+            border-radius: 3px;
+        }
+        
+        /* Error banner */
+        .error-banner {
+            background: var(--danger);
+            color: white;
+            padding: 10px 20px;
+            font-size: 9px;
+            text-align: center;
+            display: none;
+        }
+        
+        .error-banner.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="error-banner" id="error-banner"></div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="logo">🍺 CEREMONY BOX 🍺</div>
+            <div class="room-code" id="room-code">LOADING...</div>
+        </div>
+        
+        <div class="main">
+            <div class="games-section">
+                <h2>👆 CLICK TO SELECT A GAME</h2>
+                <div class="games-grid">
+                    <div class="game-card" data-game="flipcup" onclick="selectGame('flipcup')">
+                        <div class="game-icon">🥤</div>
+                        <div class="game-name">FLIP CUP</div>
+                        <div class="game-players">2-8 players</div>
+                    </div>
+                    <div class="game-card" data-game="steer-clear" onclick="selectGame('steer-clear')">
+                        <div class="game-icon">🚗</div>
+                        <div class="game-name">STEER CLEAR</div>
+                        <div class="game-players">2-8 players</div>
+                    </div>
+                    <div class="game-card" data-game="goalkeeper" onclick="selectGame('goalkeeper')">
+                        <div class="game-icon">🥅</div>
+                        <div class="game-name">GOALKEEPER</div>
+                        <div class="game-players">2-8 players</div>
+                    </div>
+                    <div class="game-card locked">
+                        <div class="game-icon">🔒</div>
+                        <div class="game-name">COMING SOON</div>
+                        <div class="game-players">???</div>
+                    </div>
+                    <div class="game-card locked">
+                        <div class="game-icon">🔒</div>
+                        <div class="game-name">COMING SOON</div>
+                        <div class="game-players">???</div>
+                    </div>
+                    <div class="game-card locked">
+                        <div class="game-icon">🔒</div>
+                        <div class="game-name">COMING SOON</div>
+                        <div class="game-players">???</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="panel qr-container">
+                    <h3>📱 SCAN TO JOIN</h3>
+                    <div id="qr-code"></div>
+                    <div class="join-url" id="join-url"></div>
+                </div>
+                
+                <div class="panel players-panel">
+                    <h3>👥 PLAYERS</h3>
+                    <div class="player-count" id="player-count">0/8 joined</div>
+                    <div class="player-list" id="player-list">
+                        <div class="waiting-text">Waiting for players to scan QR...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="camera-status" id="camera-status">
+                <span>📷</span>
+                <span id="camera-text">Initializing camera...</span>
+            </div>
+            <button class="start-btn" id="start-btn" disabled onclick="startGame()">
+                🎮 START GAME
+            </button>
+        </div>
+    </div>
+    
+    <div class="camera-preview" id="camera-preview" style="display:none;">
+        <video id="webcam" autoplay playsinline muted></video>
+        <div class="camera-label" id="camera-label">Camera</div>
+    </div>
+
+    <script type="module">
+        import { createHost } from '../shared/sync.js';
+        import { CHARACTERS, generateRoomCode, getCharacterById } from '../shared/characters.js';
+        
+        // === STATE ===
+        let state = {
+            roomCode: null,
+            selectedGame: null,
+            players: [],
+            cameraReady: false,
+            syncEngine: null,
+            syncMode: null
+        };
+        
+        // Make functions available globally for onclick handlers
+        window.selectGame = selectGame;
+        window.startGame = startGame;
+        
+        // === INIT ===
+        async function init() {
+            // Generate room code
+            state.roomCode = generateRoomCode();
+            document.getElementById('room-code').textContent = state.roomCode;
+            
+            // Generate QR code
+            const baseUrl = window.location.href.replace('/host/', '/player/').split('?')[0];
+            const joinUrl = `${baseUrl}?room=${state.roomCode}`;
+            document.getElementById('join-url').textContent = joinUrl;
+            
+            const qrContainer = document.getElementById('qr-code');
+            try {
+                // Try QRCode.toCanvas first (qrcode npm package)
+                if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+                    await QRCode.toCanvas(qrContainer, joinUrl, {
+                        width: 150,
+                        margin: 1,
+                        color: { dark: '#000000', light: '#ffffff' }
+                    });
+                } else if (typeof QRCode !== 'undefined') {
+                    // Try qrcodejs library
+                    qrContainer.innerHTML = '';
+                    new QRCode(qrContainer, {
+                        text: joinUrl,
+                        width: 150,
+                        height: 150,
+                        colorDark: '#000000',
+                        colorLight: '#ffffff'
+                    });
+                } else {
+                    throw new Error('No QR library loaded');
+                }
+                console.log('QR code generated for:', joinUrl);
+            } catch (err) {
+                console.error('QR error:', err);
+                qrContainer.innerHTML = '<div style="padding:20px;font-size:8px;color:#000;">QR unavailable<br>Use URL below</div>';
+            }
+            
+            // Init camera
+            await initCamera();
+            
+            // Init sync engine
+            await initSync();
+            
+            // Add debug players if ?debug
+            if (window.location.search.includes('debug')) {
+                setTimeout(addDebugPlayers, 500);
+            }
+        }
+        
+        // === CAMERA ===
+        async function initCamera() {
+            const statusEl = document.getElementById('camera-status');
+            const textEl = document.getElementById('camera-text');
+            const previewEl = document.getElementById('camera-preview');
+            const videoEl = document.getElementById('webcam');
+            
+            try {
+                console.log('Requesting camera access...');
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480, facingMode: 'user' },
+                    audio: false 
+                });
+                
+                videoEl.srcObject = stream;
+                
+                // Wait for video to be ready
+                await new Promise((resolve, reject) => {
+                    videoEl.onloadedmetadata = resolve;
+                    videoEl.onerror = reject;
+                    setTimeout(() => reject(new Error('Video load timeout')), 5000);
+                });
+                
+                await videoEl.play();
+                
+                state.cameraReady = true;
+                textEl.textContent = 'Camera ready';
+                previewEl.style.display = 'block';
+                document.getElementById('camera-label').textContent = '📹 Live';
+                
+                console.log('Camera initialized:', {
+                    width: videoEl.videoWidth,
+                    height: videoEl.videoHeight
+                });
+            } catch (err) {
+                console.error('Camera error:', err);
+                statusEl.classList.add('error');
+                textEl.textContent = 'Camera error: ' + err.message;
+                showError('Camera access denied. Motion tracking disabled, but you can still play!');
+            }
+        }
+        
+        // === SYNC ===
+        async function initSync() {
+            try {
+                state.syncEngine = createHost(state.roomCode);
+                await state.syncEngine.init();
+                
+                state.syncMode = state.syncEngine.getMode();
+                console.log('Sync initialized in mode:', state.syncMode);
+                
+                // Show sync mode indicator
+                const modeText = state.syncMode === 'websocket' ? '🌐 Online' : '📺 Local';
+                document.getElementById('camera-text').textContent += ` | ${modeText}`;
+                
+                // Listen for player joins
+                state.syncEngine.on('player_join', ({ player }) => {
+                    console.log('Player joining:', player);
+                    if (player) {
+                        addPlayer(player);
+                    }
+                });
+                
+                state.syncEngine.on('player_leave', ({ playerId }) => {
+                    console.log('Player leaving:', playerId);
+                    if (playerId) {
+                        removePlayer(playerId);
+                    }
+                });
+                
+            } catch (err) {
+                console.error('Sync init error:', err);
+                showError('Sync failed - players may not be able to join. Try refreshing.');
+            }
+        }
+        
+        // === GAME SELECTION ===
+        function selectGame(gameId) {
+            state.selectedGame = gameId;
+            
+            document.querySelectorAll('.game-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-game="${gameId}"]`)?.classList.add('selected');
+            
+            updateStartButton();
+        }
+        
+        // === PLAYERS ===
+        function addPlayer(player) {
+            if (state.players.find(p => p.id === player.id)) return;
+            
+            state.players.push(player);
+            renderPlayers();
+            updateStartButton();
+        }
+        
+        function removePlayer(playerId) {
+            state.players = state.players.filter(p => p.id !== playerId);
+            renderPlayers();
+            updateStartButton();
+        }
+        
+        function renderPlayers() {
+            const listEl = document.getElementById('player-list');
+            const countEl = document.getElementById('player-count');
+            
+            countEl.textContent = `${state.players.length}/8 joined`;
+            
+            if (state.players.length === 0) {
+                listEl.innerHTML = '<div class="waiting-text">Waiting for players to scan QR...</div>';
+                return;
+            }
+            
+            listEl.innerHTML = state.players.map(p => {
+                const char = getCharacterById(p.characterId) || { emoji: '🎮', color: '#fff' };
+                return `
+                    <div class="player-item" style="border-left: 3px solid ${char.color}">
+                        <span class="player-emoji">${char.emoji}</span>
+                        <span class="player-name">${p.name}</span>
+                        <span class="player-ready">✓ READY</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // === START ===
+        function updateStartButton() {
+            const btn = document.getElementById('start-btn');
+            const canStart = state.players.length >= 2 && state.selectedGame;
+            btn.disabled = !canStart;
+            
+            if (!state.selectedGame) {
+                btn.textContent = '👆 SELECT A GAME';
+            } else if (state.players.length < 2) {
+                btn.textContent = `👥 NEED ${2 - state.players.length} MORE PLAYERS`;
+            } else {
+                btn.textContent = '🎮 START GAME';
+            }
+        }
+        
+        function startGame() {
+            if (state.players.length < 2 || !state.selectedGame) return;
+            alert('Starting ' + state.selectedGame + ' with ' + state.players.length + ' players!\n\n(Game screen coming soon)');
+        }
+        
+        // === DEBUG ===
+        function addDebugPlayers() {
+            const debugChars = ['maccha', 'guru', 'halfcut'];
+            debugChars.forEach((charId, i) => {
+                const char = getCharacterById(charId);
+                addPlayer({
+                    id: 'debug-' + i,
+                    name: char?.name || charId.toUpperCase(),
+                    characterId: charId
+                });
+            });
+        }
+        
+        // === UTILS ===
+        function showError(msg) {
+            const banner = document.getElementById('error-banner');
+            banner.textContent = msg;
+            banner.classList.add('show');
+        }
+        
+        // === START ===
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Join Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-mid: #12121a;
+            --neon-cyan: #00ffff;
+            --neon-magenta: #ff00ff;
+            --neon-yellow: #ffff00;
+            --neon-green: #00ff88;
+            --text-white: #ffffff;
+            --danger: #ff3366;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background: linear-gradient(180deg, #0a0015 0%, #150030 50%, #0a0a15 100%);
+            color: var(--text-white);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .screen.active { display: flex; }
+        
+        /* === CONNECTING === */
+        #connecting-screen {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .connecting-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: pulse 1s ease infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .connecting-text {
+            font-size: 12px;
+            color: var(--neon-cyan);
+        }
+        
+        .room-code-display {
+            font-size: 18px;
+            color: var(--neon-yellow);
+            margin-top: 15px;
+            text-shadow: 0 0 10px var(--neon-yellow);
+        }
+        
+        .error-text {
+            color: var(--danger);
+            font-size: 10px;
+            margin-top: 20px;
+        }
+        
+        /* === CHARACTER SELECT === */
+        #character-screen {
+            padding-bottom: 100px;
+        }
+        
+        .screen-title {
+            font-size: 14px;
+            color: var(--neon-cyan);
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+        
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+        
+        .character-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .character-card:active {
+            transform: scale(0.95);
+        }
+        
+        .character-card.selected {
+            border-color: var(--neon-green);
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .character-card.taken {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        
+        .character-emoji {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .character-name {
+            font-size: 8px;
+            text-align: center;
+        }
+        
+        .character-card.taken .character-name::after {
+            content: ' (TAKEN)';
+            color: var(--danger);
+        }
+        
+        /* Custom name input */
+        .custom-name-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .custom-name-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 10px;
+            display: block;
+            text-align: center;
+        }
+        
+        .custom-name-input {
+            width: 100%;
+            padding: 15px;
+            font-family: inherit;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: var(--text-white);
+            text-align: center;
+            text-transform: uppercase;
+        }
+        
+        .custom-name-input:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+        }
+        
+        .custom-name-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Join button */
+        .join-btn-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(transparent, var(--bg-dark) 50%);
+        }
+        
+        .join-btn {
+            width: 100%;
+            padding: 20px;
+            font-family: inherit;
+            font-size: 14px;
+            background: linear-gradient(135deg, var(--neon-green), #00cc6a);
+            border: none;
+            border-radius: 12px;
+            color: var(--bg-dark);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .join-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .join-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        /* === WAITING LOBBY === */
+        #lobby-screen {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .your-character {
+            margin-bottom: 30px;
+        }
+        
+        .your-emoji {
+            font-size: 80px;
+            margin-bottom: 15px;
+            animation: bounce 1s ease infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .your-name {
+            font-size: 18px;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 15px var(--neon-cyan);
+        }
+        
+        .lobby-status {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 30px;
+        }
+        
+        .other-players {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .other-player {
+            font-size: 30px;
+        }
+        
+        .waiting-for-game {
+            font-size: 12px;
+            color: var(--neon-yellow);
+            margin-top: 40px;
+            animation: blink 1.5s ease infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* === IN GAME === */
+        #game-screen {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .game-phase {
+            font-size: 10px;
+            color: var(--neon-magenta);
+            margin-bottom: 10px;
+        }
+        
+        .game-message {
+            font-size: 24px;
+            color: var(--text-white);
+            text-shadow: 0 0 10px currentColor;
+            margin-bottom: 30px;
+        }
+        
+        .your-turn-indicator {
+            font-size: 14px;
+            padding: 15px 30px;
+            background: rgba(255, 255, 0, 0.2);
+            border: 2px solid var(--neon-yellow);
+            border-radius: 8px;
+            color: var(--neon-yellow);
+            animation: pulse 1s ease infinite;
+        }
+        
+        .drink-counter {
+            margin-top: 40px;
+        }
+        
+        .drink-label {
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 10px;
+        }
+        
+        .drink-count {
+            font-size: 48px;
+            color: var(--neon-magenta);
+            text-shadow: 0 0 20px var(--neon-magenta);
+        }
+        
+        /* Chaos voting */
+        .chaos-section {
+            margin-top: 40px;
+            width: 100%;
+        }
+        
+        .chaos-title {
+            font-size: 10px;
+            color: var(--danger);
+            margin-bottom: 15px;
+        }
+        
+        .chaos-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .chaos-btn {
+            padding: 12px 20px;
+            font-family: inherit;
+            font-size: 10px;
+            background: rgba(255, 51, 102, 0.2);
+            border: 2px solid var(--danger);
+            border-radius: 8px;
+            color: var(--danger);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .chaos-btn:active {
+            transform: scale(0.95);
+            background: var(--danger);
+            color: var(--bg-dark);
+        }
+        
+        .chaos-btn.voted {
+            background: var(--danger);
+            color: var(--bg-dark);
+        }
+    </style>
+</head>
+<body>
+    <!-- CONNECTING -->
+    <div id="connecting-screen" class="screen active">
+        <div class="connecting-icon">📡</div>
+        <div class="connecting-text">CONNECTING...</div>
+        <div class="room-code-display" id="connecting-room-code"></div>
+        <div class="error-text" id="connection-error"></div>
+    </div>
+    
+    <!-- CHARACTER SELECT -->
+    <div id="character-screen" class="screen">
+        <div class="screen-title">🍺 PICK YOUR FIGHTER 🍺</div>
+        <div class="character-grid" id="character-grid"></div>
+        
+        <div class="custom-name-section">
+            <label class="custom-name-label">OR ENTER YOUR OWN NAME</label>
+            <input type="text" class="custom-name-input" id="custom-name" 
+                   placeholder="TYPE HERE..." maxlength="12" autocomplete="off">
+        </div>
+        
+        <div class="join-btn-container">
+            <button class="join-btn" id="join-btn" disabled>SELECT A CHARACTER</button>
+        </div>
+    </div>
+    
+    <!-- LOBBY -->
+    <div id="lobby-screen" class="screen">
+        <div class="your-character">
+            <div class="your-emoji" id="lobby-emoji">🤙</div>
+            <div class="your-name" id="lobby-name">MACCHA</div>
+        </div>
+        
+        <div class="lobby-status">
+            <div>You're in! Waiting for others...</div>
+            <div class="other-players" id="other-players"></div>
+        </div>
+        
+        <div class="waiting-for-game">WAITING FOR HOST TO START...</div>
+    </div>
+    
+    <!-- IN GAME -->
+    <div id="game-screen" class="screen">
+        <div class="game-phase" id="game-phase">LOBBY</div>
+        <div class="game-message" id="game-message">Get ready...</div>
+        
+        <div class="your-turn-indicator hidden" id="your-turn">
+            👆 YOUR TURN - GET TO THE TV!
+        </div>
+        
+        <div class="drink-counter">
+            <div class="drink-label">YOUR DRINKS</div>
+            <div class="drink-count" id="drink-count">0</div>
+        </div>
+        
+        <div class="chaos-section hidden" id="chaos-section">
+            <div class="chaos-title">⚡ VOTE FOR CHAOS ⚡</div>
+            <div class="chaos-buttons">
+                <button class="chaos-btn" data-chaos="reversed">🔄 REVERSED</button>
+                <button class="chaos-btn" data-chaos="blind">🙈 BLIND</button>
+                <button class="chaos-btn" data-chaos="speed">⚡ SPEED UP</button>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { CHARACTERS, getAvailableCharacters, getCharacterById } from '../shared/characters.js';
+        import { createPlayer } from '../shared/sync.js';
+        
+        // === STATE ===
+        const state = {
+            roomCode: null,
+            playerId: 'player-' + Math.random().toString(36).substr(2, 9),
+            selectedCharacter: null,
+            customName: '',
+            joined: false,
+            sync: null,
+            roomState: null,
+            takenCharacters: [],
+            votedChaos: null
+        };
+        
+        // === DOM REFS ===
+        const dom = {
+            connectingScreen: document.getElementById('connecting-screen'),
+            characterScreen: document.getElementById('character-screen'),
+            lobbyScreen: document.getElementById('lobby-screen'),
+            gameScreen: document.getElementById('game-screen'),
+            connectingRoomCode: document.getElementById('connecting-room-code'),
+            connectionError: document.getElementById('connection-error'),
+            characterGrid: document.getElementById('character-grid'),
+            customName: document.getElementById('custom-name'),
+            joinBtn: document.getElementById('join-btn'),
+            lobbyEmoji: document.getElementById('lobby-emoji'),
+            lobbyName: document.getElementById('lobby-name'),
+            otherPlayers: document.getElementById('other-players'),
+            gamePhase: document.getElementById('game-phase'),
+            gameMessage: document.getElementById('game-message'),
+            yourTurn: document.getElementById('your-turn'),
+            drinkCount: document.getElementById('drink-count'),
+            chaosSection: document.getElementById('chaos-section')
+        };
+        
+        // === INIT ===
+        async function init() {
+            // Get room code from URL
+            const params = new URLSearchParams(window.location.search);
+            state.roomCode = params.get('room');
+            
+            if (!state.roomCode) {
+                showError('No room code provided. Scan the QR code on the TV!');
+                return;
+            }
+            
+            dom.connectingRoomCode.textContent = state.roomCode;
+            
+            // Try to connect
+            try {
+                state.sync = createPlayer(state.roomCode, state.playerId);
+                
+                // Listen for connection events
+                state.sync.on('connected', () => {
+                    console.log('Connected to room!');
+                    showCharacterSelect();
+                });
+                
+                state.sync.on('state', handleStateUpdate);
+                
+                state.sync.on('disconnected', () => {
+                    console.log('Disconnected from server');
+                });
+                
+                state.sync.on('connection_lost', () => {
+                    showError('Connection lost. Please refresh and try again.');
+                });
+                
+                await state.sync.init();
+                
+                // Check connection after init
+                const mode = state.sync.getMode();
+                console.log('Sync mode:', mode);
+                
+                if (mode === 'local') {
+                    // For local mode (BroadcastChannel), we need to wait for state
+                    // Give a bit more time then check
+                    setTimeout(() => {
+                        if (state.sync.isInRoom()) {
+                            showCharacterSelect();
+                        } else {
+                            showError('Room not found. Is the host screen open?');
+                        }
+                    }, 2000);
+                }
+                // WebSocket mode handles connection via 'connected' event above
+                
+            } catch (err) {
+                console.error('Connection error:', err);
+                showError('Could not connect. Make sure host is running and try again.');
+            }
+        }
+        
+        function showError(msg) {
+            dom.connectionError.textContent = msg;
+        }
+        
+        // === SCREENS ===
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+        
+        function showCharacterSelect() {
+            showScreen('character-screen');
+            renderCharacters();
+            
+            // Event listeners
+            dom.customName.addEventListener('input', (e) => {
+                state.customName = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+                e.target.value = state.customName;
+                
+                if (state.customName.length >= 2) {
+                    state.selectedCharacter = null;
+                    document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
+                    updateJoinButton();
+                }
+            });
+            
+            dom.joinBtn.addEventListener('click', joinGame);
+        }
+        
+        function renderCharacters() {
+            const available = getAvailableCharacters(state.takenCharacters);
+            
+            dom.characterGrid.innerHTML = CHARACTERS.map(char => {
+                const taken = state.takenCharacters.includes(char.id);
+                return `
+                    <div class="character-card ${taken ? 'taken' : ''}" 
+                         data-id="${char.id}"
+                         style="border-color: ${char.color}20">
+                        <div class="character-emoji">${char.emoji}</div>
+                        <div class="character-name">${char.name}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Click handlers
+            document.querySelectorAll('.character-card:not(.taken)').forEach(card => {
+                card.addEventListener('click', () => selectCharacter(card.dataset.id));
+            });
+        }
+        
+        function selectCharacter(id) {
+            state.selectedCharacter = id;
+            state.customName = '';
+            dom.customName.value = '';
+            
+            document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
+            document.querySelector(`[data-id="${id}"]`).classList.add('selected');
+            
+            updateJoinButton();
+        }
+        
+        function updateJoinButton() {
+            const hasSelection = state.selectedCharacter || state.customName.length >= 2;
+            dom.joinBtn.disabled = !hasSelection;
+            
+            if (state.selectedCharacter) {
+                const char = getCharacterById(state.selectedCharacter);
+                dom.joinBtn.textContent = `JOIN AS ${char.name}`;
+            } else if (state.customName.length >= 2) {
+                dom.joinBtn.textContent = `JOIN AS ${state.customName}`;
+            } else {
+                dom.joinBtn.textContent = 'SELECT A CHARACTER';
+            }
+        }
+        
+        function joinGame() {
+            const name = state.customName || getCharacterById(state.selectedCharacter)?.name;
+            const characterId = state.selectedCharacter || 'custom';
+            
+            state.sync.joinRoom({
+                id: state.playerId,
+                name: name,
+                characterId: characterId,
+                customEmoji: state.customName ? '🎮' : null
+            });
+            
+            state.joined = true;
+            
+            // Update lobby display
+            const char = getCharacterById(characterId);
+            dom.lobbyEmoji.textContent = char?.emoji || '🎮';
+            dom.lobbyName.textContent = name;
+            
+            showScreen('lobby-screen');
+        }
+        
+        // === STATE SYNC ===
+        function handleStateUpdate(roomState) {
+            state.roomState = roomState;
+            
+            // Update taken characters
+            state.takenCharacters = roomState.players
+                .filter(p => p.id !== state.playerId)
+                .map(p => p.characterId)
+                .filter(id => id !== 'custom');
+            
+            if (!state.joined) {
+                renderCharacters();
+            }
+            
+            // Update other players in lobby
+            if (state.joined && roomState.phase === 'lobby') {
+                const others = roomState.players.filter(p => p.id !== state.playerId);
+                dom.otherPlayers.innerHTML = others.map(p => {
+                    const char = getCharacterById(p.characterId);
+                    return `<span class="other-player" title="${p.name}">${char?.emoji || '🎮'}</span>`;
+                }).join('');
+            }
+            
+            // Handle game phase changes
+            if (roomState.phase !== 'lobby' && roomState.phase !== 'starting') {
+                showScreen('game-screen');
+                updateGameScreen(roomState);
+            }
+        }
+        
+        function updateGameScreen(roomState) {
+            dom.gamePhase.textContent = roomState.phase.toUpperCase().replace(/_/g, ' ');
+            
+            // Check if it's our turn
+            const currentPlayer = roomState.players[roomState.currentPlayerIndex];
+            const isMyTurn = currentPlayer?.id === state.playerId;
+            
+            if (isMyTurn) {
+                dom.yourTurn.classList.remove('hidden');
+                dom.gameMessage.textContent = "IT'S YOUR TURN!";
+                dom.gameMessage.style.color = 'var(--neon-yellow)';
+            } else {
+                dom.yourTurn.classList.add('hidden');
+                dom.gameMessage.textContent = `${currentPlayer?.name || '...'} is playing`;
+                dom.gameMessage.style.color = 'var(--text-white)';
+            }
+            
+            // Update drink count
+            const me = roomState.players.find(p => p.id === state.playerId);
+            if (me) {
+                dom.drinkCount.textContent = me.totalDrinks || 0;
+            }
+            
+            // Show chaos voting during runs (for spectators)
+            if (roomState.phase === 'the_run' && !isMyTurn) {
+                dom.chaosSection.classList.remove('hidden');
+            } else {
+                dom.chaosSection.classList.add('hidden');
+            }
+        }
+        
+        // === CHAOS VOTING ===
+        document.querySelectorAll('.chaos-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (state.votedChaos) return;
+                
+                state.votedChaos = btn.dataset.chaos;
+                btn.classList.add('voted');
+                
+                state.sync.sendChaosVote(state.votedChaos);
+                
+                // Reset after this run
+                setTimeout(() => {
+                    state.votedChaos = null;
+                    document.querySelectorAll('.chaos-btn').forEach(b => b.classList.remove('voted'));
+                }, 5000);
+            });
+        });
+        
+        // === VIBRATION FEEDBACK ===
+        function vibrate(pattern = [50]) {
+            if (navigator.vibrate) {
+                navigator.vibrate(pattern);
+            }
+        }
+        
+        // === START ===
+        init();
+    </script>
+</body>
+</html>
